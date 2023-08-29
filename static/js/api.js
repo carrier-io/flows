@@ -1,13 +1,13 @@
 const getWorkflowsUrl = () => {
-    return `${V.build_api_url('flowy', 'workflows')}/${getSelectedProjectId()}`
+    return `${V.build_api_url('flows', 'workflows')}/${getSelectedProjectId()}`
 }
 
 const getWorkflowUrl = () => {
-    return `${V.build_api_url('flowy', 'workflow')}/${getSelectedProjectId()}`
+    return `${V.build_api_url('flows', 'workflow')}/${getSelectedProjectId()}`
 }
 
 const ApiExecuteFlow = async (payload) => {
-    const api_url = V.build_api_url('flowy', 'execute')
+    const api_url = V.build_api_url('flows', 'execute')
     const res = await fetch(`${api_url}/${getSelectedProjectId()}`, {
         headers: {
             'Content-Type': 'application/json'
@@ -21,7 +21,7 @@ const ApiExecuteFlow = async (payload) => {
 
 
 const ApiSaveFlow = async (payload) => {
-    const api_url = `${V.build_api_url('flowy', 'workflows')}/${getSelectedProjectId()}`
+    const api_url = `${V.build_api_url('flows', 'workflows')}/${getSelectedProjectId()}`
     $.ajax({
         url: api_url,
         type: 'POST',
@@ -47,7 +47,7 @@ const ApiSaveFlow = async (payload) => {
 
 
 const ApiLoadFlow = async (doneCallback) => {
-    const api_url = `${V.build_api_url('flowy', 'workflows')}/${getSelectedProjectId()}`
+    const api_url = `${V.build_api_url('flows', 'workflows')}/${getSelectedProjectId()}`
     $.get(api_url)
         .done((resp) => {
             doneCallback(resp, $("#flow-name"))

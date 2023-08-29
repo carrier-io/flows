@@ -1,5 +1,5 @@
 <script src="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.js"></script>
-<script src="{{url_for('flowy.static', filename='js/api.js')}}"></script>
+<script src="{{url_for('flows.static', filename='js/api.js')}}"></script>
 
 <script>
     // Data store
@@ -53,11 +53,11 @@
             rpcInternalName = drag.querySelector(".blockelemtype").dataset.rpcInternalName;
             drag.innerHTML += `
                 <div class='blockyleft'>
-                    <img src="{{url_for('flowy.static', filename='img/actionblue.svg')}}">
+                    <img src="{{url_for('flows.static', filename='img/actionblue.svg')}}">
                     <p class='blockyname'>${drag.querySelector(".blockelemtype").dataset.rpcName}</p>
                 </div>
                 <div class='blockyright'>
-                    <img src="{{url_for('flowy.static', filename='img/more.svg')}}">
+                    <img src="{{url_for('flows.static', filename='img/more.svg')}}">
                 </div>
                 <div class='blockydiv'></div>
                 <div class='blockyinfo'>${rpcInternalName}</div>
@@ -120,12 +120,12 @@
                                 data-rpc-params='{{rpc.params | tojson}}'
                             >
                             <div class="grabme">
-                                <img src="{{ url_for('flowy.static', filename='img/grabme.svg') }}">
+                                <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
                             </div>
                             <div class="blockin">
                                 <div class="blockico">
                                     <span></span>
-                                    <img src="{{ url_for('flowy.static', filename='img/action.svg') }}">
+                                    <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
                                 </div>
                                 <div class="blocktext">
                                     <p class="blocktitle">{{rpc.display_name}}</p>
@@ -146,12 +146,12 @@
                             data-rpc-name="IF"
                         >
                         <div class="grabme">
-                            <img src="{{ url_for('flowy.static', filename='img/grabme.svg') }}">
+                            <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
                         </div>
                         <div class="blockin">
                             <div class="blockico">
                                 <span></span>
-                                <img src="{{ url_for('flowy.static', filename='img/action.svg') }}">
+                                <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
                             </div>
                             <div class="blocktext">
                                 <p class="blocktitle">IF</p>

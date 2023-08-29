@@ -2,7 +2,7 @@
     <div class="container-fluid">
         <div id="leftcard">
             <div id="closecard">
-                <img src="{{ url_for('flowy.static', filename='img/closeleft.svg') }}">
+                <img src="{{ url_for('flows.static', filename='img/closeleft.svg') }}">
             </div>
 
             <div class="float-right mr-3">
@@ -30,7 +30,7 @@
             <p id="header">Blocks</p>
             
             <div id="search">
-                <img src="{{ url_for('flowy.static', filename='img/search.svg') }}">
+                <img src="{{ url_for('flows.static', filename='img/search.svg') }}">
                 <input type="text" placeholder="Search blocks">
             </div>
 
@@ -53,12 +53,12 @@
                             data-rpc-params='{{rpc.params | tojson}}'
                         >
                         <div class="grabme">
-                            <img src="{{ url_for('flowy.static', filename='img/grabme.svg') }}">
+                            <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
                         </div>
                         <div class="blockin">
                             <div class="blockico">
                                 <span></span>
-                                <img src="{{ url_for('flowy.static', filename='img/action.svg') }}">
+                                <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
                             </div>
                             <div class="blocktext">
                                 <p class="blocktitle">{{rpc.display_name}}</p>
@@ -72,7 +72,7 @@
         <div id="propwrap">
             <div id="properties">
                 <div id="close">
-                    <img src="{{ url_for('flowy.static', filename='img/close.svg') }}">
+                    <img src="{{ url_for('flows.static', filename='img/close.svg') }}">
                 </div>
                 <p id="header2">Properties</p>
                 <div id="propswitch">

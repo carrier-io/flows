@@ -118,11 +118,11 @@ const FlowBoard = {
                 rpcInternalName = drag.querySelector(".blockelemtype").dataset.rpcInternalName;
                 drag.innerHTML += `
                     <div class='blockyleft'>
-                        <img src="{{url_for('flowy.static', filename='img/actionblue.svg')}}">
+                        <img src="{{url_for('flows.static', filename='img/actionblue.svg')}}">
                         <p class='blockyname'>${drag.querySelector(".blockelemtype").dataset.rpcName}</p>
                     </div>
                     <div class='blockyright'>
-                        <img src="{{url_for('flowy.static', filename='img/more.svg')}}">
+                        <img src="{{url_for('flows.static', filename='img/more.svg')}}">
                     </div>
                     <div class='blockydiv'></div>
                     <div class='blockyinfo'>${rpcInternalName}</div>
@@ -185,12 +185,12 @@ const FlowBoard = {
                                     data-rpc-params='{{rpc.params | tojson}}'
                                 >
                                 <div class="grabme">
-                                    <img src="{{ url_for('flowy.static', filename='img/grabme.svg') }}">
+                                    <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
                                 </div>
                                 <div class="blockin">
                                     <div class="blockico">
                                         <span></span>
-                                        <img src="{{ url_for('flowy.static', filename='img/action.svg') }}">
+                                        <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
                                     </div>
                                     <div class="blocktext">
                                         <p class="blocktitle">{{rpc.display_name}}</p>
@@ -211,12 +211,12 @@ const FlowBoard = {
                                 data-rpc-name="IF"
                             >
                             <div class="grabme">
-                                <img src="{{ url_for('flowy.static', filename='img/grabme.svg') }}">
+                                <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
                             </div>
                             <div class="blockin">
                                 <div class="blockico">
                                     <span></span>
-                                    <img src="{{ url_for('flowy.static', filename='img/action.svg') }}">
+                                    <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
                                 </div>
                                 <div class="blocktext">
                                     <p class="blocktitle">IF</p>
@@ -647,7 +647,7 @@ const FlowBoard = {
     <div class="container-fluid">
       <div id="leftcard">
         <div id="closecard">
-            <img src="{{ url_for('flowy.static', filename='img/closeleft.svg') }}">
+            <img src="{{ url_for('flows.static', filename='img/closeleft.svg') }}">
         </div>
         <div class="float-right mr-2">
             <button id="run" type="button" class="btn btn-success">
@@ -672,7 +672,7 @@ const FlowBoard = {
         <p id="header">Blocks</p>
         
         <div id="search">
-            <img src="{{ url_for('flowy.static', filename='img/search.svg') }}">
+            <img src="{{ url_for('flows.static', filename='img/search.svg') }}">
             <input type="text" placeholder="Search blocks">
         </div>
         <div id="subnav">
@@ -693,12 +693,12 @@ const FlowBoard = {
                         data-rpc-params='{{rpc.params | tojson}}'
                     >
                     <div class="grabme">
-                        <img src="{{ url_for('flowy.static', filename='img/grabme.svg') }}">
+                        <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
                     </div>
                     <div class="blockin">
                         <div class="blockico">
                             <span></span>
-                            <img src="{{ url_for('flowy.static', filename='img/action.svg') }}">
+                            <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
                         </div>
                         <div class="blocktext">
                             <p class="blocktitle">{{rpc.display_name}}</p>
@@ -712,7 +712,7 @@ const FlowBoard = {
       <div id="propwrap">
         <div id="properties">
             <div id="close">
-                <img src="{{ url_for('flowy.static', filename='img/close.svg') }}">
+                <img src="{{ url_for('flows.static', filename='img/close.svg') }}">
             </div>
             <p id="header2">Properties</p>
             <div id="propswitch">

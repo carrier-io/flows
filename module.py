@@ -31,7 +31,7 @@ class Module(module.ModuleModel):
 
     def init(self):
         """ Init module """
-        log.info('Initializing AI Prompts module')
+        log.info('Initializing Flows module')
 
         self.descriptor.init_blueprint()
         self.descriptor.init_api()
