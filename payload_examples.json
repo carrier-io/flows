@@ -1,0 +1,137 @@
+// V1
+{
+    "output": null,
+    "tasks": {
+        "embeddings_calculate_similarities1": {
+            "rpc_name": "embeddings_calculate_similarities",
+            "params": {
+                "columns": {
+                    "attrs": {
+                        "cols": 30,
+                        "rows": 4
+                    },
+                    "tag": "textarea",
+                    "value": null
+                },
+                "cutoff": {
+                    "attrs": {
+                        "max": 1,
+                        "min": 0,
+                        "type": "number"
+                    },
+                    "tag": "input",
+                    "value": "0.4"
+                },
+                "library": {
+                    "attrs": {
+                        "type": "text"
+                    },
+                    "tag": "input",
+                    "value": "steps"
+                },
+                "steps": {
+                    "attrs": {
+                        "cols": 30,
+                        "rows": 4
+                    },
+                    "tag": "textarea",
+                    "value": "Login user,\nCreates application test,\nLaunches application test,\nDelete that application test,\nEnters test result page"
+                },
+                "stringify": {
+                    "attrs": {
+                        "type": "checkbox"
+                    },
+                    "tag": "input",
+                    "value": "on"
+                },
+                "top_k": {
+                    "attrs": {
+                        "type": "number"
+                    },
+                    "tag": "input",
+                    "value": "5"
+                }
+            },
+            "step": 1,
+            "parent": null,
+            "parent_list": []
+        },
+        "flowy_evaluate3": {
+            "rpc_name": "flowy_evaluate",
+            "params": {
+                "query": {
+                    "value": "$..similar"
+                },
+                "payload": {
+                    "value": "prev.similarities"
+                }
+            },
+            "step": 2,
+            "parent": "embeddings_calculate_similarities1",
+            "parent_list": [
+                "embeddings_calculate_similarities1"
+            ]
+        }
+    }
+}
+
+
+// V2
+{
+    "output": null,
+    "tasks": {
+        "embeddings_calculate_similarities1": {
+            "rpc_name": "embeddings_calculate_similarities",
+            "params": {
+                "columns": null,
+                "cutoff": "0.4",
+                "library": "steps",
+                "steps": "Login user,\nCreates application test,\nLaunches application test,\nDelete that application test,\nEnters test result page",
+                "stringify": false,
+                "top_k": 5
+            },
+            "step": 1,
+            "parent": null,
+            "parent_list": []
+        },
+        "flowy_evaluate3": {
+            "rpc_name": "flowy_evaluate",
+            "params": {
+                "query": "$..similar",
+                "payload": "prev.similarities"
+            },
+            "step": 2,
+            "parent": "embeddings_calculate_similarities1",
+            "parent_list": [
+                "embeddings_calculate_similarities1"
+            ]
+        }
+    }
+}
+
+
+// "prompts_predict4": {
+//     "rpc_name": "prompts_predict",
+//     "params": {
+//         "payload": {
+//             "value": {
+//                 "input":"What is the longest river in Uzbekistan?",
+//                 "integration_id": 1,
+//                 "project_id": 1,
+//                 "prompt_id": 1,
+//                 "integration_settings": {
+//                     "model_name": "text-bison@001",
+//                     "temperature": 1,
+//                     "max_decode_steps": 256,
+//                     "top_p": 0.8,
+//                     "top_k": 40
+//                 }
+//             }
+//         }
+//     },
+//     "step": 2,
+//     "parent": "embeddings_calculate_similarities1",
+//     "parent_list": [
+//         "embeddings_calculate_similarities1"
+//     ]
+// }

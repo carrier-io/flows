@@ -1,0 +1,71 @@
+{
+    "variables":{
+        "name": "Susan"
+    },
+    "output": null,
+    "tasks": {
+        "flowy_make_request1": {
+            "rpc_name": "flowy_make_request",
+            "params": {
+                "jwt_token": {
+                    "attrs": {
+                        "type": "text",
+                        "input_name": "{{prev.name}}"
+                    },
+                    "tag": "input"
+                },
+                "method": {
+                    "choices": {
+                        "delete": "Delete",
+                        "get": "Get",
+                        "patch": "Patch",
+                        "post": "Post",
+                        "put": "Put"
+                    },
+                    "tag": "select"
+                },
+                "url": {
+                    "attrs": {
+                        "type": "text"
+                    },
+                    "tag": "input"
+                }
+            },
+            "step": 1,
+            "parent": null,
+            "parent_list": []
+        },
+        "flowy_make_request2": {
+            "rpc_name": "flowy_make_request",
+            "params": {
+                "jwt_token": {
+                    "attrs": {
+                        "type": "text"
+                    },
+                    "tag": "input"
+                },
+                "method": {
+                    "choices": {
+                        "delete": "Delete",
+                        "get": "Get",
+                        "patch": "Patch",
+                        "post": "Post",
+                        "put": "Put"
+                    },
+                    "tag": "select"
+                },
+                "url": {
+                    "attrs": {
+                        "type": "text"
+                    },
+                    "tag": "input"
+                }
+            },
+            "step": 2,
+            "parent": "flowy_make_request1",
+            "parent_list": [
+                "flowy_make_request1"
+            ]
+        }
+    }
+}
