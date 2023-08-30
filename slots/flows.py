@@ -30,35 +30,32 @@ class Slot:  # pylint: disable=E1101,R0903
     def get_tasks_meta(context):
         meta = tasklib.list_tasks_meta()
         return {
-            name:{
+            name: {
                 'display_name': entry[1],
                 'params': entry[0]
             }
             for name, entry in meta.items()
         }
 
-
-    @web.slot("new_flowy_content")
-    @auth.decorators.check_slot(['models.flowy'], access_denied_reply=theme.access_denied_part)
+    @web.slot("flows_content")
+    @auth.decorators.check_slot(['models.flows'], access_denied_reply=theme.access_denied_part)
     def _flow_content(self, context, slot, payload):
         _ = slot, payload
         data = Slot.get_tasks_meta(context)
         with context.app.app_context():
-            return self.descriptor.render_template("flowy/content.html", rpcs=data)
+            return self.descriptor.render_template("flows/content.html", rpcs=data)
 
-
-    @web.slot("new_flowy_styles")
-    @auth.decorators.check_slot(["models.flowy"])
+    @web.slot("flows_styles")
+    @auth.decorators.check_slot(["models.flows"])
     def _flow_styles(self, context, slot, payload):
         _ = slot, payload
         with context.app.app_context():
-            return self.descriptor.render_template("flowy/styles.html")
+            return self.descriptor.render_template("flows/styles.html")
 
-
-    @web.slot("new_flowy_scripts")
-    @auth.decorators.check_slot(["models.flowy"])
+    @web.slot("flows_scripts")
+    @auth.decorators.check_slot(["models.flows"])
     def _flow_scripts(self, context, slot, payload):
         _ = slot, payload
         data = Slot.get_tasks_meta(context)
         with context.app.app_context():
-            return self.descriptor.render_template("flowy/scripts.html", rpcs=data)
+            return self.descriptor.render_template("flows/scripts.html", rpcs=data)

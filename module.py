@@ -33,30 +33,28 @@ class Module(module.ModuleModel):
         """ Init module """
         log.info('Initializing Flows module')
 
-        self.descriptor.init_blueprint()
-        self.descriptor.init_api()
-        self.descriptor.init_slots()
-        self.descriptor.init_rpcs()
-        self.descriptor.init_events()
+
 
         from .init_db import init_db
         init_db()
 
         theme.register_subsection(
-            "models", "flowy",
-            "Flowy",
-            title="Task Flow",
+            "models", "flows",
+            "Flows",
+            title="Flows",
             kind="slot",
-            prefix="new_flowy_",
+            prefix="flows_",
             weight=2,
             permissions={
-                "permissions": ["models.flowy"],
+                "permissions": ["models.flows"],
                 "recommended_roles": {
-                    "administration": {"admin": True, "editor": True, "viewer": True},
-                    "default": {"admin": True, "editor": True, "viewer": True},
+                    "administration": {"admin": True, "editor": True, "viewer": False},
+                    "default": {"admin": True, "editor": True, "viewer": False},
                 }
             }
         )
+
+        self.descriptor.init_all()
 
     def deinit(self):  # pylint: disable=R0201
         """ De-init module """
