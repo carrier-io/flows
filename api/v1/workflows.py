@@ -1,7 +1,6 @@
 from flask import request
 from tools import api_tools
 from pydantic import ValidationError
-from ...models.serializers.workflow import workflow_schema, workflows_schema
 
 
 class ProjectAPI(api_tools.APIModeHandler):
@@ -9,15 +8,15 @@ class ProjectAPI(api_tools.APIModeHandler):
     def post(self, project_id: int):
         data = request.json
         try:
-            workflow = self.module.create_workflow(project_id, data)
+            result = self.module.create_workflow(project_id, data)
         except ValidationError as e:
             return e.errors(), 400
-        return workflow_schema.dump(workflow), 200
+        return result, 200
     
 
     def get(self, project_id: int):
-        workflows = self.module.list_workflows(project_id)
-        return workflows_schema.dump(workflows), 200
+        result = self.module.list_workflows(project_id)
+        return result, 200
 
 
 class AdminAPI(api_tools.APIModeHandler):
