@@ -25,6 +25,11 @@ const FlowNode = {
 const FlowNodesContainer = {
     props: ['flow_blocks'],
     components: {FlowNode},
+    watch: {
+        flow_blocks(newValue) {
+            this.$nextTick(() => $('[data-toggle="tooltip"]').tooltip())
+        }
+    },
     template: `
 <div style="position: absolute; z-index: 100;" class="m-3 d-flex flex-column flow_items_container">
     <FlowNode
