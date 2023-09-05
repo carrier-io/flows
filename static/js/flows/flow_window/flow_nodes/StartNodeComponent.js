@@ -54,7 +54,7 @@ const StartNodeComponent = {
             <div class="card-header d-flex">
                 <div class="flex-grow-1">
                     <p>Properties</p>
-                    <p>{{ node_meta.name }}</p>
+                    <span>{{ node_meta.name }}</span>
                 </div>
                 <div>
                     <button class="btn btn-action btn-24"

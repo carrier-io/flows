@@ -1,8 +1,12 @@
-{# vendor library #}
+{# vendor libraries #}
 <script src="{{ url_for('flows.static', filename='vendor/Drawflow/dist/drawflow.min.js') }}"></script>
+<script src="{{ url_for('design-system.static', filename='assets/vendor/nouislider/nouislider.js') }}"></script>
+<script src="{{ url_for('design-system.static', filename='assets/vendor/nouislider/wNumb.min.js') }}"></script>
+
 
 {# nodes helpers #}
 <script src="{{ url_for('flows.static', filename='js/flows/flow_properties_components/VariablesInput.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_properties_components/FlowHandlersSection.js') }}"></script>
 
 {# flow nodes #}
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/GenericNodeComponent.js') }}"></script>

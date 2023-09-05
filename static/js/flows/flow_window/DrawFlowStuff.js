@@ -28,6 +28,7 @@ const DrawFlowStuff = {
         editor.attachVueDataProxy = true
         editor.zoom_max = 1
         editor.zoom_min = 1
+        editor.exportSkipKeys = ['options']
 
         editor.start()
 
