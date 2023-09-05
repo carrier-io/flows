@@ -50,14 +50,16 @@ const GenericNodeComponent = {
         >
             <div class="card-header d-flex">
                 <div class="flex-grow-1">
-                    <p>Properties</p>
-                    <span>{{ node_meta.name }}</span>
+                    <p class="font-h5 font-weight-bold text-capitalize">Properties</p>
+                    <span class="font-h6 font-weight-bold text-capitalize">
+                        {{ node_meta.name }}
+                    </span>
                 </div>
                 <div>
                     <button class="btn btn-action btn-24"
                         @click="options.properties_open = false"
                     >
-                        <i class="fa fa-times"></i>
+                        <i class="fa fa-times fa-xl"></i>
                     </button>
                 </div>
                 

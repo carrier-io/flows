@@ -17,18 +17,27 @@ const DrawFlowStuff = {
     },
     mounted() {
         const vueProxy = {version: 3, h: Vue.h, render: Vue.render}
-        // const editor = new Drawflow(this.$refs.drawflowtest, vueProxy);
-        const editor = new Drawflow(this.$refs.drawflowtest, vueProxy, vueApp._context);
-        // Pass render Vue 3 Instance
-        // const internalInstance = getCurrentInstance()
+        const editor = new Drawflow(this.$refs.drawFlowArea, vueProxy, vueApp._context)
 
-        // editor.value = new Drawflow(this.$refs.drawflowtest, vueProxy, vueApp._context)
         editor.reroute = true
         editor.reroute_fix_curvature = true
+
+        // editor export data will become reactive proxy
         editor.attachVueDataProxy = true
+
+        // disable zoom function for now
         editor.zoom_max = 1
         editor.zoom_min = 1
+
+        // disable exporting these keys. 'options' might not be serializable
         editor.exportSkipKeys = ['options']
+
+        // move properties window when canvas moves
+        editor.on('translate', position => {
+            const el = document.querySelector('.flow_node_properties_container')
+            el.style.top = `${-1 * position.y}px`
+            el.style.right = `${position.x}px`
+        })
 
         editor.start()
 
@@ -69,11 +78,11 @@ const DrawFlowStuff = {
         },
         handleDrop(e) {
             this.dropAreaStyle = {}
-            console.log(e.type, e?.target, e.dataTransfer)
+            // console.log(e.type, e?.target, e.dataTransfer)
             const nodeUid = e.dataTransfer.getData("node")
-            console.log(nodeUid)
+            // console.log(nodeUid)
             const [pos_x, pos_y] = this.getNodeCoords(e.clientX, e.clientY)
-            console.log({pos_x, pos_y})
+            // console.log({pos_x, pos_y})
             const nodeMeta = this.getNodeMeta(nodeUid)
             delete nodeMeta.node_data
             this.editor.addNode(
@@ -84,47 +93,46 @@ const DrawFlowStuff = {
                 pos_y,
                 'flow_node',
                 {},
-                nodeUid, 'vue'
+                nodeUid,
+                'vue'
             )
 
         }
     },
     template: `
 <div class="w-100 h-100">
-<!--    qwerty-->
-<!--    <button class="btn" @click="handleBtn">BTN</button>-->
-    <div id="drawflowtest" ref="drawflowtest" class="w-100 h-100 flow_canvas"
+    <div id="drawFlowArea" ref="drawFlowArea" class="w-100 h-100 flow_canvas"
         :style="dropAreaStyle"
         @drop.prevent="handleDrop" 
         @dragover.prevent="dropAreaStyle = {border: '1px dashed var(--basic)'}"
     ></div>
     
-<div class="modal modal-small fixed-left fade shadow-sm" tabindex="-1" role="dialog" id="testDetailsModal">
-    <div class="modal-dialog modal-dialog-aside" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="row w-100">
-                    <div class="col">
-                        <p class="font-h3 font-weight-bold">Small Modal</p>
-                    </div>
-                    <div class="col-xs">
-                        <button type="button" class="btn mr-2 btn-secondary" data-dismiss="modal" aria-label="Close">
-                            Cancel
-                        </button>
-                        <button type="button" id="save" class="btn   btn-basic">Primary button</button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-body">
-                <div class="section">
-                    <div class="row">
-                        <div class="col" style="background-color: dimgrey; min-height: 500px;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!--    <div class="modal modal-small fixed-left fade shadow-sm" tabindex="-1" role="dialog" id="testDetailsModal">-->
+<!--        <div class="modal-dialog modal-dialog-aside" role="document">-->
+<!--            <div class="modal-content">-->
+<!--                <div class="modal-header">-->
+<!--                    <div class="row w-100">-->
+<!--                        <div class="col">-->
+<!--                            <p class="font-h3 font-weight-bold">Small Modal</p>-->
+<!--                        </div>-->
+<!--                        <div class="col-xs">-->
+<!--                            <button type="button" class="btn mr-2 btn-secondary" data-dismiss="modal" aria-label="Close">-->
+<!--                                Cancel-->
+<!--                            </button>-->
+<!--                            <button type="button" id="save" class="btn   btn-basic">Primary button</button>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--                <div class="modal-body">-->
+<!--                    <div class="section">-->
+<!--                        <div class="row">-->
+<!--                            <div class="col" style="background-color: dimgrey; min-height: 500px;"></div>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
 
 </div>
     `
