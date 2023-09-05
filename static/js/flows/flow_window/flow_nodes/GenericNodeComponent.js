@@ -33,7 +33,7 @@ const GenericNodeComponent = {
         }
     },
     template: `
-    <div class="d-flex">
+    <div class="d-flex p-3">
         <div class="flex-grow-1">
             <span class="font-h6 text-capitalize">{{ node_meta.name }}</span>
         </div>

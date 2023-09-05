@@ -12,8 +12,8 @@
   --dfNodeBorderRadius: 4px;
   --dfNodeMinHeight: 40px;
   --dfNodeMinWidth: 260px;
-  --dfNodePaddingTop: 12px;
-  --dfNodePaddingBottom: 12px;
+  --dfNodePaddingTop: 0px;
+  --dfNodePaddingBottom: 0px;
   --dfNodeBoxShadowHL: 0px;
   --dfNodeBoxShadowVL: 1px;
   --dfNodeBoxShadowBR: 12px;

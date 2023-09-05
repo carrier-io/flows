@@ -1,8 +1,7 @@
-const StartNodeComponent = {
+const EmbeddingSearchNode = {
     props: ['node_meta', 'node_data', 'node_id'],
     data() {
         return {
-            variables: [{name: 'var1', type: 'string', value: 'qwerty'}],
             options: {
                 properties_open: false,
             }
@@ -15,6 +14,7 @@ const StartNodeComponent = {
                 this.options.properties_open = false
             }
         })
+        this.refresh_pickers()
     },
     computed: {},
     methods: {
@@ -23,13 +23,13 @@ const StartNodeComponent = {
         },
     },
     watch: {
-        'options.properties_open': function (newValue) {
-            newValue && this.refresh_pickers()
-        }
+        // 'options.properties_open': function (newValue) {
+        //     newValue && this.refresh_pickers()
+        // }
     },
     template: `
-    <div class="d-flex flex-column p-3">
-        <div class="d-flex">
+    <div class="d-flex flex-column">
+        <div class="d-flex p-3">
             <div class="flex-grow-1">
                 <span class="font-h6 text-capitalize">{{ node_meta.name }}</span>
             </div>
@@ -41,6 +41,16 @@ const StartNodeComponent = {
                 </button>
             </div>
         </div>
+        <div class="d-flex flex-column" style="border-top: 1px solid var(--gray200)">
+            <div class="d-flex flex-column p-3">
+                <select class="selectpicker" data-style="select-secondary" 
+                >
+                    <option>OOO</option>
+        <!--            <option v-for="o in variable_types" :value="o" :key="o">{{ o }}</option>-->
+                </select>
+            </div>
+        </div>
+        
         <div v-if="false">
             id: {{node_id}}
             <br/>
@@ -66,7 +76,6 @@ const StartNodeComponent = {
                 
             </div>
             <div class="card-body">
-                <VariablesInput v-model="variables"></VariablesInput>
             </div>
         </div>
     </div>

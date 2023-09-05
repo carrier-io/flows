@@ -8,9 +8,10 @@
       "outputs":1
    },
    {
-      "tooltip":"embed_search.svg",
+      "tooltip":"Search with embeddings",
       "icon_url":"/flows/static/icons/embed_search.svg",
-      "uid":"search"
+      "uid":"search",
+      "name": "Embedding Search"
    },
    {
       "tooltip":"embed_deduplicate.svg",

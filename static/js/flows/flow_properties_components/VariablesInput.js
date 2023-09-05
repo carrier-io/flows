@@ -32,7 +32,7 @@ const VariablesInput = {
                 <input v-model="i.name" type="text"/>
             </div>
             <div>
-                <select class="selectpicker " data-style="select-secondary" 
+                <select class="selectpicker" data-style="select-secondary" 
                     v-model="i.type"
                 >
                     <option v-for="o in variable_types" :value="o" :key="o">{{ o }}</option>
