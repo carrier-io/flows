@@ -1,5 +1,3 @@
-
-
 const nodeComponentMapping = {
     start: StartNodeComponent,
 }
@@ -30,15 +28,17 @@ const DrawFlowStuff = {
         editor.zoom_max = 1
         editor.zoom_min = 1
 
-        this.flow_blocks.forEach(i => {
-            editor.registerNode(i.uid, Vue.markRaw(getVueComponent(i.uid)), {node_meta: i}, {});
-        })
-
-
         editor.start()
 
         this.editor = editor
         this.$root.registered_components.DrawFlowStuff = this
+    },
+    watch: {
+        flow_blocks(newValue) {
+            newValue.forEach(i => {
+                this.editor.registerNode(i.uid, Vue.markRaw(getVueComponent(i.uid)), {node_meta: i}, {});
+            })
+        }
     },
     methods: {
         handleBtn() {

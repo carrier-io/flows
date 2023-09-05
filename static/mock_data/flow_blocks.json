@@ -1,0 +1,41 @@
+[
+   {
+      "uid":"start",
+      "name":"Start",
+      "tooltip":"start block",
+      "icon_fa":"fa fa-terminal fa-xl",
+      "inputs":0,
+      "outputs":1
+   },
+   {
+      "tooltip":"embed_deduplicate.svg",
+      "icon_url":"/flows/static/icons/embed_deduplicate.svg",
+      "uid":"deduplicate",
+      "name":"deduplicate"
+   },
+   {
+      "tooltip":"embed_search.svg",
+      "icon_url":"/flows/static/icons/embed_search.svg",
+      "uid":"search"
+   },
+   {
+      "tooltip":"evaluate.svg",
+      "icon_url":"/flows/static/icons/evaluate.svg",
+      "uid":"evaluate"
+   },
+   {
+      "tooltip":"pause.svg",
+      "icon_url":"/flows/static/icons/pause.svg",
+      "uid":"pause"
+   },
+   {
+      "tooltip":"prompt.svg",
+      "icon_url":"/flows/static/icons/prompt.svg",
+      "uid":"prompt"
+   },
+   {
+      "tooltip":"stop.svg",
+      "icon_url":"/flows/static/icons/stop.svg",
+      "uid":"stop"
+   }
+]
