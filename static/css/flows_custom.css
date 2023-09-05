@@ -56,16 +56,27 @@
 
 }
 
+.drawflow-node.flow_node {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.drawflow .drawflow-node .inputs, .drawflow .drawflow-node .outputs {
+    position: relative;
+    height: 0;
+}
+
 /* this is for vertical node connectors */
 .flow_node > div.inputs > div.input {
-    transform: translate(-50%, -27px);
+    /*transform: translate(-50%, -10px);*/
+    transform: translate(-50%, -50%);
     left: 0;
     top: 0;
 }
 
 /* this is for vertical node connectors */
 .flow_node > div.outputs > div.output {
-    transform: translate(-50%, 30px);
+    transform: translate(-50%, -50%);
     right: 0;
     top: 0;
 }

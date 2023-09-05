@@ -1,5 +1,6 @@
 const nodeComponentMapping = {
     start: StartNodeComponent,
+    search: EmbeddingSearchNode,
 }
 
 const getVueComponent = uid => {

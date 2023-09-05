@@ -22,7 +22,7 @@ function customStringify(obj) {
 const DebugWindow = {
     data() {
       return {
-          ta_1: JSON.stringify({
+          ta_2: JSON.stringify({
   "drawflow": {
     "Home": {
       "data": {
@@ -57,6 +57,75 @@ const DebugWindow = {
           },
           "pos_x": 152,
           "pos_y": 96
+        }
+      }
+    }
+  }
+}),
+          ta_1: JSON.stringify({
+  "drawflow": {
+    "Home": {
+      "data": {
+        "1": {
+          "id": 1,
+          "name": "search",
+          "data": {
+            "options": {
+              "properties_open": false
+            }
+          },
+          "class": "flow_node",
+          "html": "search",
+          "typenode": "vue",
+          "inputs": {
+            "input_1": {
+              "connections": [
+                {
+                  "node": "2",
+                  "input": "output_1"
+                }
+              ]
+            }
+          },
+          "outputs": {
+            "output_1": {
+              "connections": []
+            }
+          },
+          "pos_x": 259,
+          "pos_y": 215
+        },
+        "2": {
+          "id": 2,
+          "name": "start",
+          "data": {
+            "variables": [
+              {
+                "name": "var1",
+                "type": "string",
+                "value": "qwerty"
+              }
+            ],
+            "options": {
+              "properties_open": false
+            }
+          },
+          "class": "flow_node",
+          "html": "start",
+          "typenode": "vue",
+          "inputs": {},
+          "outputs": {
+            "output_1": {
+              "connections": [
+                {
+                  "node": "1",
+                  "output": "input_1"
+                }
+              ]
+            }
+          },
+          "pos_x": 113,
+          "pos_y": 15
         }
       }
     }
