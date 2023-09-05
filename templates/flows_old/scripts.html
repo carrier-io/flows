@@ -1,0 +1,641 @@
+<script src="https://cdn.jsdelivr.net/gh/alyssaxuu/flowy/flowy.min.js"></script>
+<script src="{{url_for('flows.static', filename='js/api.js')}}"></script>
+
+<script>
+    // Data store
+    /*
+        {
+            "output":"",
+            "task_id1":{
+                "rpc_name":"",
+                "params":{
+                    "name1":"value1",
+                    "name2":"value2"
+                }
+            },
+            "task_id2": {...}
+        }
+    */
+    let workflow_url
+    let workflows_url
+    taskSerialNumber = 0;
+    flowData = {"output":null, "tasks":{},};
+    dump = {"name":"Hello"}
+</script>
+
+
+<script>
+    $(document).on('vue_init', () => {
+        workflows_url = getWorkflowsUrl();
+        workflow_url = getWorkflowUrl();
+
+        var rightcard = false;
+        var tempblock;
+        var tempblock2;
+        flowy(document.getElementById("canvas"), drag, release, snapping, onRearrange);
+        function addEventListenerMulti(type, listener, capture, selector) {
+            var nodes = document.querySelectorAll(selector);
+            for (var i = 0; i < nodes.length; i++) {
+                nodes[i].addEventListener(type, listener, capture);
+            }
+        }
+        function snapping(drag, first, parent) {
+            // identifying step number
+            if (first){
+                stepNumber = 1
+            } else {
+                stepNumber = parseInt(parent.querySelector(".blockelemtype").dataset.stepNumber) + 1
+            }
+            var grab = drag.querySelector(".grabme");
+            grab.parentNode.removeChild(grab);
+            var blockin = drag.querySelector(".blockin");
+            blockin.parentNode.removeChild(blockin);
+            rpcInternalName = drag.querySelector(".blockelemtype").dataset.rpcInternalName;
+            drag.innerHTML += `
+                <div class='blockyleft'>
+                    <img src="{{url_for('flows.static', filename='img/actionblue.svg')}}">
+                    <p class='blockyname'>${drag.querySelector(".blockelemtype").dataset.rpcName}</p>
+                </div>
+                <div class='blockyright'>
+                    <img src="{{url_for('flows.static', filename='img/more.svg')}}">
+                </div>
+                <div class='blockydiv'></div>
+                <div class='blockyinfo'>${rpcInternalName}</div>
+            `;
+            // Filling flow data 
+            rpcParams = getRpcParams(drag)
+
+            taskSerialNumber += 1
+            taskId = rpcInternalName + taskSerialNumber;
+            drag.querySelector(".blockelemtype").dataset.taskId = taskId
+            drag.querySelector(".blockelemtype").dataset.stepNumber = stepNumber
+            if (parent){
+                parentTaskId = parent.querySelector(".blockelemtype").dataset.taskId
+                parentParentList = Array.from(flowData['tasks'][parentTaskId]['parent_list'])
+                parentParentList.push(parentTaskId)
+                flowData['tasks'][taskId] = {
+                    "rpc_name":rpcInternalName,
+                    "params":rpcParams,
+                    "step":stepNumber,
+                    "parent": parentTaskId,
+                    "parent_list": parentParentList,
+                }
+            }
+            else {
+                flowData['tasks'][taskId] = {
+                    "rpc_name":rpcInternalName,
+                    "params":rpcParams,
+                    "step":stepNumber,
+                    "parent": null,
+                    "parent_list": [],
+                }
+            }
+            return true;
+        }
+        function drag(block) {
+            block.classList.add("blockdisabled");
+            tempblock2 = block;
+        }
+        function release(e) {
+            if (tempblock2) {
+                tempblock2.classList.remove("blockdisabled");
+            }
+        }
+        var disabledClick = function(){
+            document.querySelector(".navactive").classList.add("navdisabled");
+            document.querySelector(".navactive").classList.remove("navactive");
+            this.classList.add("navactive");
+            this.classList.remove("navdisabled");
+            if (this.getAttribute("id") == "actions") {
+                document.getElementById("blocklist").innerHTML = `
+                    {% for name, rpc in rpcs.items() %}
+                        <div class="blockelem create-flowy noselect">
+                            <input 
+                                type="hidden" 
+                                name='blockelemtype' 
+                                class="blockelemtype" 
+                                value="{{loop.index}}"
+                                data-rpc-internal-name="{{name}}"
+                                data-rpc-name="{{rpc.display_name}}"
+                                data-rpc-params='{{rpc.params | tojson}}'
+                            >
+                            <div class="grabme">
+                                <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
+                            </div>
+                            <div class="blockin">
+                                <div class="blockico">
+                                    <span></span>
+                                    <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
+                                </div>
+                                <div class="blocktext">
+                                    <p class="blocktitle">{{rpc.display_name}}</p>
+                                    <p class="blockdesc">{{name}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                `
+            } else if (this.getAttribute("id") == "flow_control") {
+                document.getElementById("blocklist").innerHTML = `
+                    <div class="blockelem create-flowy noselect">
+                        <input 
+                            type="hidden" 
+                            name='blockelemtype' 
+                            class="blockelemtype" 
+                            data-rpc-internal-name="_if_"
+                            data-rpc-name="IF"
+                        >
+                        <div class="grabme">
+                            <img src="{{ url_for('flows.static', filename='img/grabme.svg') }}">
+                        </div>
+                        <div class="blockin">
+                            <div class="blockico">
+                                <span></span>
+                                <img src="{{ url_for('flows.static', filename='img/action.svg') }}">
+                            </div>
+                            <div class="blocktext">
+                                <p class="blocktitle">IF</p>
+                                <p class="blockdesc">If statement to control flow</p>
+                            </div>
+                        </div>
+                    </div>` 
+            }
+        }
+        
+        addEventListenerMulti("click", disabledClick, false, ".side");
+        document.getElementById("close").addEventListener("click", function(){
+           if (rightcard) {
+               rightcard = false;
+               saveInputData()
+               document.getElementById("properties").classList.remove("expanded");
+               setTimeout(function(){
+                    document.getElementById("propwrap").classList.remove("itson"); 
+               }, 300);
+                tempblock.classList.remove("selectedblock");
+           }
+        });
+        
+        document.getElementById("removeblock").addEventListener("click", function(){
+            flowy.deleteBlocks();
+            flowData = {"output":null, "tasks":{}, };
+            document.getElementById("close").click()
+        });
+
+        var aclick = false;
+        var noinfo = false;
+        var beginTouch = function (event) {
+            aclick = true;
+            noinfo = false;
+            if (event.target.closest(".create-flowy")) {
+                noinfo = true;
+            }
+        }
+        var checkTouch = function (event) {
+            aclick = false;
+        }
+        var doneTouch = function (event) {
+            if (event.type === "mouseup" && aclick && !noinfo) {
+            if (!rightcard && event.target.closest(".block") && !event.target.closest(".block").classList.contains("dragging")) {
+                    tempblock = event.target.closest(".block");
+                    
+                    // generating RPC function params form
+                    text = generateParams(tempblock)
+                    
+                    $("#proplist").append(text)
+                    
+                    // registering input field handlers
+                    $('.input-param').change((e)=>{
+                        paramName = e.target.name
+                        taskId = tempblock.querySelector(".blockelemtype").dataset.taskId
+                        flowData['tasks'][taskId]['params'][paramName]['value'] = e.target.value
+
+                    })
+                    //
+                    rightcard = true;
+                    document.getElementById("properties").classList.add("expanded");
+                    document.getElementById("propwrap").classList.add("itson");
+                    tempblock.classList.add("selectedblock");
+            } 
+            }
+        }
+        addEventListener("mousedown", beginTouch, false);
+        addEventListener("mousemove", checkTouch, false);
+        addEventListener("mouseup", doneTouch, false);
+        addEventListenerMulti("touchstart", beginTouch, false, ".block");    
+    })
+    
+    function getInputTag(name, meta){
+        // declering boilerplate part
+        main = `<div class="form-row"><div class="form-group col">`
+        labelText = `<label class="inputlabel">${meta.displayName ? meta.displayName : name}</label>`
+        lowerText = `</div></div>`
+        datalistText = `<datalist id="defaults"><option value="infer_from_context"></datalist>`
+        inputText = ``
+        
+        // determining input field tag text
+        if (meta.tag != 'select'){
+            openningTagText =`<${meta.tag} `         
+            closingTagText = `</${meta.tag}> `
+            openningTagText += `class="form-control input-param" `
+            for (attr in meta.attrs){
+                openningTagText += `${attr}="${meta.attrs[attr]}" `
+            }
+            openningTagText += `name='${name}' `
+            if (meta.value){
+                openningTagText += `value='${meta.value}'`
+            }
+            // adding datalist option
+            if (meta.tag == "input" && meta.attrs.type== "text"){
+                openningTagText += 'list="defaults" '  
+                closingTagText += datalistText
+            }
+            openningTagText += `>`
+            inputText = openningTagText + closingTagText
+
+        } else {
+            inputText = getSelectTag(name, meta)
+        }
+        // summing all text    
+        main += labelText
+        main += inputText
+        main += lowerText
+        return main
+    }
+
+    function getRpcParams(block){
+        const json = block.querySelector(".blockelemtype").dataset.rpcParams;
+        const obj = JSON.parse(json);
+        flatObj = makeFlatNestedObject(obj)
+        return flatObj   
+    }
+
+    function generateParams(block){
+        flatObj = getRpcParams(block)
+        taskId = block.querySelector(".blockelemtype").dataset.taskId
+        text = "<form>"
+        params = flowData['tasks'][taskId]['params']
+        for (key in params){
+            text += new FormFieldGen(key, params[key]).genFieldTag()
+        }
+        text += "</form>"
+        return text
+    }
+
+    function makeFlatNestedObject(ob){
+        let result = {};
+        for (const i in ob) {
+            if (ob[i]['nested_params']) {
+                delete ob[i]['nested_params']
+                const temp = makeFlatNestedObject(ob[i]);
+                for (const j in temp) {
+                    result[i + '.' + j] = temp[j];
+                }
+            }
+            else {
+                delete ob[i]['nested_params']
+                result[i] = ob[i];
+            }
+        }
+        return result;
+    }
+
+    function onRearrange(block, parent){
+        // deleting current task entry
+        currentTaskId = block.querySelector(".blockelemtype").dataset.taskId
+        delete flowData['tasks'][currentTaskId]
+        
+        // delete children entries
+        for (taskId in flowData.tasks){
+            if (flowData['tasks'][taskId]['parent_list'].includes(currentTaskId)){
+                delete flowData['tasks'][taskId]
+            }
+        }
+    }
+
+</script>
+
+<script>
+    function getTaskId(){
+        return $('div.block.selectedblock > .blockelemtype').data("taskId")
+    }
+
+    function saveInputData(){
+        $(".input-param").each((index, elem) => {
+            taskId = getTaskId()
+            if (!taskId) return 
+            value = elem.value ? elem.value : null
+            if (elem.name != "logFilePath"){
+                name = elem.name
+                flowData['tasks'][taskId]['params'][name]['value'] = value
+            }
+            else {
+                flowData['output'] = value
+            }   
+        })
+    }
+
+    var wait_modal_needed = false;
+    $(document).on('vue_init', () => {
+        $("#flow-save-button").click(async () => {
+            $("#flow-save-part-buttons").hide();
+            $("#flow-save-part-processing").show();
+            var data = {
+                "name": $("#flow-save-name").val(),
+                "flow_data": flowData,
+                "display_data": flowy.output(), 
+            };
+            ApiSaveFlow(data)
+        });
+        
+        $("#load").click(() =>{
+            $("#flow-name").css("display", "block")
+            $("#flow-save-name").css("display", "none")
+            $("#flow-modal-label").text("Load Workflow")
+            enableBtnOnModal("flow-load-button")
+
+            // call to backend to get list of workflows
+            ApiLoadFlow(populateWorkflowNames)
+        });
+
+        $("#flow-modal").on("hidden.bs.modal", function(e){
+            clearWorkflowNames()
+        })
+
+        $("#flow-load-button").click(function(e){
+            id = $("#flow-name").val()
+            restoreWorkflow(id, workflow_url)
+            $("#flow-modal").modal("hide")
+            
+        })
+
+        $("#delete").click(() => {
+            $("#flow-name").css("display", "block")
+            $("#flow-save-name").css("display", "none")
+            $("#flow-modal-label").text("Delete Workflow")
+            enableBtnOnModal("flow-delete-button")
+
+            // call to backend to get list of workflows
+            ApiLoadFlow(populateWorkflowNames)
+        })
+
+        $("#flow-delete-button").click((e) => {
+            id = $("#flow-name").val()
+            url = workflow_url + '/' + id
+            $.ajax({
+                url: url,
+                type: 'DELETE',
+                success: function(response) {
+                    $("#flow-save-part-processing").hide();
+                    $("#flow-save-part-buttons").show();
+                    $("#flow-save-name").val("");
+                    $("#flow-modal").modal("hide");
+                    showNotify("SUCCESS", response.msg)
+                },
+                error: function(response){
+                    $("#flow-save-part-processing").hide();
+                    $("#flow-save-part-buttons").show();
+                    $("#flow-save-name").val("");
+                    $("#flow-modal").modal("hide");
+                    showNotify("ERROR", response.responseJSON.error)
+                },
+                dataType: "json",
+                contentType: "application/json"
+            });
+        })
+
+        $("#save").click(()=> {
+            $("#flow-name").css("display", "none")
+            $("#flow-save-name").css("display", "block")
+            $("#flow-modal-label").text("Save Workflow")
+            enableBtnOnModal("flow-save-button")
+        })
+
+        function enableBtnOnModal(enabledBtnId){
+            // disable all
+            $("#flow-delete-button").css("display", "none")
+            $("#flow-load-button").css("display", "none")
+            $("#flow-save-button").css("display", "none")
+
+            // enable right btn
+            $("#"+enabledBtnId).css("display", "block")
+            
+        }
+
+        function populateWorkflowNames(workflows, parentTag){
+            txt = ""
+            workflows.forEach((workflow) => {
+                txt += `<option value="${workflow.id}">${workflow.name}</option>`
+            })
+            parentTag.append(txt)
+        }
+
+        function clearWorkflowNames(){
+            $("#flow-name").empty()
+        }
+
+        function restoreWorkflow(workflowId, workflowUrl){
+            $.get(workflowUrl + '/' + workflowId)
+                .done(resp => {
+                    flowData = resp['flow_data']
+                    displayData =  resp['display_data']
+                    drawOnBoard(displayData);
+                })
+        }
+
+        function drawOnBoard(displayData){
+            flowy.deleteBlocks()
+            flowy.import(displayData)
+        }
+
+        $("#wait-modal").on("shown.bs.modal", function (e) {
+            if (!wait_modal_needed) {
+              $("#wait-modal").modal("hide");
+            }
+        });
+
+        $("#sidebarToggleTop").trigger("click");
+        $("nav").removeClass("mb-4");
+
+        $("#close").click(() => {
+            $("#proplist").empty()
+            $('div.block.selectedblock').removeClass("selectedblock")
+        })
+
+        $('#alertprop').click(()=>{
+            saveInputData()
+            console.log(flowData)
+
+            // cleaning props
+            $("#proplist").empty()
+
+            // enabling output field
+            taskId = getTaskId()
+            outputMeta = {
+                'tag': 'input',
+                'attrs':{'type':'text'},
+                'value':flowData['output'],
+                'displayName': 'Log File Path',
+            }
+            text = new FormFieldGen('logFilePath', outputMeta).genFieldTag()
+            $("#proplist").append(text)
+            $('.input-param').change((e) => {
+                flowData['output'] = e.target.value
+            })
+            // filling value in the input
+            if (flowData['output']) {
+                $(`input[name|='logFilePath']`).val(flowData['output'])
+            }
+        });
+
+        $('#dataprop').click(()=>{
+            saveInputData()
+            console.log(flowData)
+
+            // cleaning props
+            $("#proplist").empty()
+
+            // enabling param fields
+            params = flowData['tasks'][taskId]['params']
+            text = "<form>"
+            for (key in params){
+                text += new FormFieldGen(key, params[key]).genFieldTag()
+            }
+            text += "</form>"
+            $("#proplist").append(text)
+
+            // registering input field handlers
+            $('.input-param').change((e)=>{
+                paramName = e.target.name
+                flowData['tasks'][taskId]['params'][paramName]['value'] = e.target.value
+            })
+        })
+        
+        $('#run').click(()=>{
+            resp = ApiExecuteFlow(flowData)
+            console.log(resp)
+        })
+
+        socket.on("flow_started", (data) => {
+            showNotify("SUCCESS", "Workflow has been started")
+        });
+
+        socket.on("task_executed", (data) => {
+            data = JSON.parse(data)
+            console.log(data)
+            if (data["ok"] == true){
+                showNotify("SUCCESS", `${data['task_id']} completed!`)
+            }
+            else {
+                showNotify("ERROR", `${data['task_id']} is failed! Reason: ${data['error']}`)
+            }
+        });
+    })
+
+    function show_wait_modal() {
+      wait_modal_needed = true;
+      $("#wait-modal").modal("show");
+    }
+    
+    function hide_wait_modal() {
+      wait_modal_needed = false;
+      $("#wait-modal").modal("hide");
+    }
+</script>
+
+
+<!-- input tag generator functions -->
+<script>
+    class FormFieldGen {
+        constructor(name, meta){
+            if (!name){
+                console.log("ERROR: invalid field name")
+                return
+            }
+            this.name = name
+            this.meta = meta
+        }
+
+        getCheckboxField(){
+            return ` <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input input-param" name='${this.name}'>
+                <label class="inputlabel form-check-label">${this.meta.displayName ? this.meta.displayName : this.name}</label>
+              </div>`
+        }
+
+        genFieldTag(){
+            if (this.meta.attrs.type=="checkbox"){
+                return this.getCheckboxField()
+            }
+
+            let main = `<div class="form-row"><div class="form-group col">`
+            let labelText = `<label class="inputlabel">${this.meta.displayName ? this.meta.displayName : this.name}</label>`
+            let lowerText = `</div></div>`
+            let inputText = ``
+
+            switch(this.meta.tag){
+                case 'select':
+                    inputText = this.genSelectTag()
+                    break;
+                case 'input':
+                    inputText = this.genInputTag()
+                    break;
+                case 'textarea':
+                    inputText = this.genRegularTag()
+                    break;
+                default:
+                    inputText = this.genInputTag()
+                    break;
+            }
+            main += labelText
+            main += inputText
+            main += lowerText
+            return main
+        }
+
+        getOpeningClosingTags(){
+            let openningTag =`<${this.meta.tag} `         
+            let closingTag = `</${this.meta.tag}> `
+
+            openningTag += `class="form-control input-param" name='${this.name}' `
+            // assinging props
+            for (let attr in this.meta.attrs){
+                openningTag += `${attr}="${this.meta.attrs[attr]}" `
+            }
+            return  {"openning": openningTag, "closing":closingTag}
+        }
+
+        genRegularTag(){
+            let tags = this.getOpeningClosingTags()
+            tags.openning += `>`
+            if (!this.meta.value)
+                return tags.openning + tags.closing
+            return tags.openning + this.meta.value + tags.closing
+        }
+
+        genInputTag(){
+            let tags = this.getOpeningClosingTags()
+            let datalistText = `<datalist id="defaults"><option value="infer_from_context"></datalist>`
+            tags.closing += datalistText           
+            tags.openning += 'list="defaults" '
+            if (this.meta.value){
+                tags.openning += `value='${this.meta.value}' `
+            }
+            tags.openning += `>`
+            return tags.openning + tags.closing
+        }
+
+        genSelectTag(){
+            let tags = this.getOpeningClosingTags()
+            let options = `<option value="infer_from_context">Infer from context</option>`
+            for (let choice in this.meta.choices){
+                if (choice == this.meta.value){
+                    options += `<option value="${choice}" selected>${this.meta.choices[choice]}</option>`
+                    continue
+                }
+                options += `<option value="${choice}">${this.meta.choices[choice]}</option>`
+            }
+            tags.openning += ">"
+            return tags.openning + options + tags.closing
+        }
+    }
+</script>
