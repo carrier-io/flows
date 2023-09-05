@@ -39,7 +39,7 @@ const export1 = {
             "variables": [
               {
                 "name": "var1",
-                "type": "string",
+                "type": 0,
                 "value": "qwerty"
               }
             ],

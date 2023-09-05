@@ -1,6 +1,14 @@
 const FlowHandlersSection = {
     props: ['modelValue'],
     emits: ['update:modelValue'],
+    data() {
+        return {
+            failure_options: [
+                {value: 0, label: 'Stop Flow'},
+                {value: 1, label: 'Ignore'},
+            ]
+        }
+    },
     template: `
 <div>
     <label class="w-100">
@@ -10,12 +18,22 @@ const FlowHandlersSection = {
             placeholder="Variable name"
         />
     </label>
-    <label class="w-100 mt-2">
+    <label class="mt-2 d-flex flex-column">
         <span class="font-h5 font-weight-bold">on Failure</span>
-        <input type="text" class="form-control w-100"
+<!--        <input type="text" class="form-control w-100"-->
+<!--            v-model="modelValue.on_failure"-->
+<!--            placeholder="Variable name"-->
+<!--        />-->
+        <select class="selectpicker bootstrap-select__b" 
             v-model="modelValue.on_failure"
-            placeholder="Variable name"
-        />
+        >
+            <option 
+                v-for="i in failure_options" 
+                :value="i.value"
+            >
+                {{ i.label }}
+            </option>
+        </select>
     </label>
     <label class="d-flex align-items-center custom-checkbox mt-2">
         <input class="custom__checkbox"

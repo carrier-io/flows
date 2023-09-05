@@ -2,14 +2,20 @@ const VariablesInput = {
     props: ['modelValue'],
     emits: ['update:modelValue'],
     data() {
-        return {variable_types: ['string', 'number', 'json']}
+        return {
+            variable_types: [
+                {value: 0, label: 'str'},
+                {value: 1, label: 'num'},
+                {value: 2, label: 'json'},
+            ]
+        }
     },
     methods: {
         refresh_pickers() {
             this.$nextTick(() => $(this.$el).find('.selectpicker').selectpicker('refresh'))
         },
         handleAddVariable() {
-            this.modelValue.push({name: '', type: 'string', value: ''})
+            this.modelValue.push({name: '', type: this.variable_types[0].value, value: ''})
             this.refresh_pickers()
         },
         handleDeleteVariable(idx) {
@@ -23,7 +29,7 @@ const VariablesInput = {
         <button class="btn btn-action btn-24"
             @click="handleAddVariable"
         >
-            <i class="fa fa-plus"></i>
+            <i class="fa fa-plus fa-xl"></i>
         </button>
     </div>
     <ul class="p-0" style="list-style: none;">
@@ -31,11 +37,11 @@ const VariablesInput = {
             <div class="custom-input custom-input__sm">
                 <input v-model="i.name" type="text"/>
             </div>
-            <div>
+            <div class="mx-1" style="max-width: 105px; width: 105px;">
                 <select class="selectpicker" data-style="select-secondary" 
                     v-model="i.type"
                 >
-                    <option v-for="o in variable_types" :value="o" :key="o">{{ o }}</option>
+                    <option v-for="o in variable_types" :value="o.value" :key="o.value">{{ o.label }}</option>
                 </select>
             </div>
             <div class="custom-input custom-input__sm">
@@ -44,7 +50,7 @@ const VariablesInput = {
             <button class="btn btn-action btn-24 ml-2"
                 @click="handleDeleteVariable(idx)"
             >
-                <i class="fa fa-minus"></i>
+                <i class="fa fa-minus fa-xl"></i>
             </button>
         </li>
     </ul>

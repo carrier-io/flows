@@ -1,14 +1,18 @@
 const StartNodeComponent = {
     props: ['node_meta', 'node_data', 'node_id'],
+    components: {
+        'VariablesInput': Vue.markRaw(VariablesInput)
+    },
     data() {
         return {
-            variables: [{name: 'var1', type: 'string', value: 'qwerty'}],
+            variables: [],
             options: {
                 properties_open: false,
             }
         }
     },
     mounted() {
+        delete this.node_data.options
         Object.assign(this.$data, this.node_data || {})
         V.registered_components.DrawFlowStuff.editor.on('nodeSelected', id => {
             if (this.node_id !== id) {
@@ -41,26 +45,21 @@ const StartNodeComponent = {
                 </button>
             </div>
         </div>
-        <div v-if="false">
-            id: {{node_id}}
-            <br/>
-            {{$data}}
-            <br/>
-            node_meta: {{node_meta}}
-        </div>
         <div class="card flow_node_properties_container" 
             v-if="options.properties_open"
         >
             <div class="card-header d-flex">
                 <div class="flex-grow-1">
-                    <p>Properties</p>
-                    <span>{{ node_meta.name }}</span>
+                    <p class="font-h5 font-weight-bold text-capitalize">Properties</p>
+                    <span class="font-h6 font-weight-bold text-capitalize">
+                        {{ node_meta.name }}
+                    </span>
                 </div>
                 <div>
                     <button class="btn btn-action btn-24"
                         @click="options.properties_open = false"
                     >
-                        <i class="fa fa-times"></i>
+                        <i class="fa fa-times fa-xl"></i>
                     </button>
                 </div>
                 
