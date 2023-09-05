@@ -2,25 +2,40 @@ const EmbeddingSearchNode = {
     props: ['node_meta', 'node_data', 'node_id'],
     data() {
         return {
+            embedding: null,
             options: {
                 properties_open: false,
             }
         }
     },
-    mounted() {
+    async mounted() {
         Object.assign(this.$data, this.node_data || {})
         V.registered_components.DrawFlowStuff.editor.on('nodeSelected', id => {
             if (this.node_id !== id) {
                 this.options.properties_open = false
             }
         })
-        this.refresh_pickers()
+        await this.fetchEmbeddings()
     },
-    computed: {},
+    computed: {
+        embeddings() {
+            return V.custom_data.embeddings
+        }
+    },
     methods: {
         refresh_pickers() {
             this.$nextTick(() => $(this.$el).find('.selectpicker').selectpicker('refresh'))
         },
+        async fetchEmbeddings() {
+            const api_url = V.build_api_url('embeddings', 'embedding')
+            const resp = await fetch(api_url + '/' + V.project_id)
+            if (resp.ok) {
+                V.custom_data.embeddings = await resp.json()
+                this.refresh_pickers()
+            } else {
+                showNotify('ERROR', 'Error fetching embeddings')
+            }
+        }
     },
     watch: {
         // 'options.properties_open': function (newValue) {
@@ -44,19 +59,18 @@ const EmbeddingSearchNode = {
         <div class="d-flex flex-column" style="border-top: 1px solid var(--gray200)">
             <div class="d-flex flex-column p-3">
                 <select class="selectpicker" data-style="select-secondary" 
+                    v-model="embedding"
                 >
-                    <option>OOO</option>
-        <!--            <option v-for="o in variable_types" :value="o" :key="o">{{ o }}</option>-->
+                    <option v-for="i in embeddings" :value="i.id" :key="i.id">{{ i.library_name }}</option>
                 </select>
             </div>
         </div>
         
-        <div v-if="false">
+        <div v-if="true">
             id: {{node_id}}
             <br/>
             {{$data}}
             <br/>
-            node_meta: {{node_meta}}
         </div>
         <div class="card flow_node_properties_container" 
             v-if="options.properties_open"
