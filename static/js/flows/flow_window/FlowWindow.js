@@ -4,47 +4,16 @@ const FlowWindow = {
     components: {FlowNodesContainer, DrawFlowStuff},
     data() {
         return {
-            flow_blocks: [
-                {
-                    uid: 'start',
-                    name: 'Start',
-                    tooltip: 'start block',
-                    icon_fa: 'fa fa-terminal fa-xl',
-                    inputs: 0,
-                    outputs: 1,
-                },
-                {
-                    tooltip: 'embed_deduplicate.svg',
-                    icon_url: '/flows/static/icons/embed_deduplicate.svg',
-                    uid: 'deduplicate',
-                    name: 'deduplicate',
-                },
-                {
-                    tooltip: 'embed_search.svg',
-                    icon_url: '/flows/static/icons/embed_search.svg',
-                    uid: 'search',
-                },
-                {
-                    tooltip: 'evaluate.svg',
-                    icon_url: '/flows/static/icons/evaluate.svg',
-                    uid: 'evaluate',
-                },
-                {
-                    tooltip: 'pause.svg',
-                    icon_url: '/flows/static/icons/pause.svg',
-                    uid: 'pause',
-                },
-                {
-                    tooltip: 'prompt.svg',
-                    icon_url: '/flows/static/icons/prompt.svg',
-                    uid: 'prompt',
-                },
-                {
-                    tooltip: 'stop.svg',
-                    icon_url: '/flows/static/icons/stop.svg',
-                    uid: 'stop',
-                },
-            ]
+            flow_blocks: []
+        }
+    },
+    async mounted() {
+        const api_url = '/flows/static/mock_data/flow_blocks.json'
+        const resp = await fetch(api_url)
+        if (resp.ok) {
+            this.flow_blocks = await resp.json()
+        } else {
+            showNotify('ERROR', 'Unable to fetch flow items')
         }
     },
     methods: {
