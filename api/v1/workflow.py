@@ -18,7 +18,7 @@
 """ API """
 from tools import api_tools
 from pylon.core.tools import log
-from ...models.serializers.workflow import workflow_schema
+# from ...models.serializers.workflow import workflow_schema
 
 
 class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
@@ -26,7 +26,7 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
 
     def get(self, project_id, id):
         workflow = self.module.get_workflow(project_id, id)
-        return workflow_schema.dump(workflow), 200
+        # return workflow_schema.dump(workflow), 200
     
 
     def delete(self, project_id, id):
