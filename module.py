@@ -33,10 +33,10 @@ class Module(module.ModuleModel):
         """ Init module """
         log.info('Initializing Flows module')
 
-
-
         from .init_db import init_db
         init_db()
+
+        self.descriptor.init_all()
 
         theme.register_subsection(
             "models", "flows",
@@ -44,7 +44,7 @@ class Module(module.ModuleModel):
             title="Flows",
             kind="slot",
             prefix="flows_",
-            weight=2,
+            weight=3,
             permissions={
                 "permissions": ["models.flows"],
                 "recommended_roles": {
@@ -54,7 +54,6 @@ class Module(module.ModuleModel):
             }
         )
 
-        self.descriptor.init_all()
 
     def deinit(self):  # pylint: disable=R0201
         """ De-init module """
