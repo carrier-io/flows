@@ -1,16 +1,23 @@
-{#<script src="{{ url_for('flows.static', filename='vendor/flowy/flowy.min.js') }}"></script>#}
-{#<script src="{{ url_for('flows.static', filename='vendor/flowy/engine/flowy.js') }}"></script>#}
-{#<script src="{{ url_for('flows.static', filename='js/flows/FlowlyStuff.js') }}"></script>#}
-
+{# vendor library #}
 <script src="{{ url_for('flows.static', filename='vendor/Drawflow/dist/drawflow.min.js') }}"></script>
-{#<script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>#}
 
-<script src="{{ url_for('flows.static', filename='js/flows/FlowNodes.js') }}"></script>
-<script src="{{ url_for('flows.static', filename='js/flows/FlowNodesContainer.js') }}"></script>
-<script src="{{ url_for('flows.static', filename='js/flows/DrawFlowStuff.js') }}"></script>
+{# nodes helpers #}
+<script src="{{ url_for('flows.static', filename='js/flows/flow_properties_components/VariablesInput.js') }}"></script>
+
+{# flow nodes #}
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/GenericNodeComponent.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/StartNodeComponent.js') }}"></script>
+
+{# nodes list items #}
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/FlowNodesContainer.js') }}"></script>
+
+{# main flow window component #}
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/DrawFlowStuff.js') }}"></script>
 <script src="{{ url_for('flows.static', filename='js/flows/DebugWindow.js') }}"></script>
-<script src="{{ url_for('flows.static', filename='js/flows/FlowWindow.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/FlowWindow.js') }}"></script>
 
+{# left window scripts #}
 <script src="{{ url_for('flows.static', filename='js/flows/LeftWindow.js') }}"></script>
 
+{# main (middle) container scripts #}
 <script src="{{ url_for('flows.static', filename='js/flows/MainContainer.js') }}"></script>
