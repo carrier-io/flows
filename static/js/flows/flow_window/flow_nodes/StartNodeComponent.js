@@ -49,8 +49,6 @@ const StartNodeComponent = {
             node_meta: {{node_meta}}
         </div>
         <div class="card flow_node_properties_container" 
-            draggable="false"
-            @drag.prevent.stop=""
             v-if="options.properties_open"
         >
             <div class="card-header d-flex">
