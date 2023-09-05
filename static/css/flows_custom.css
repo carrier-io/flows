@@ -1,0 +1,81 @@
+/*.flowly_canvas {*/
+/*    background-color: var(--gray100);*/
+/*    position: absolute;*/
+/*    width: calc(100% - 40px);*/
+/*    height: calc(100% - 96px);*/
+/*    !*top: 71px;*!*/
+/*    !*left: 361px;*!*/
+/*    z-index: 0;*/
+/*    overflow: auto;*/
+/*}*/
+.flow_canvas {
+    border-left: 1px solid var(--gray200, #EAEDEF);
+    background: var(--gray100, #F6F9FC);
+}
+
+.flow_li {
+    display: flex;
+    /*width: 64px;*/
+    width: 32px;
+    /*height: 64px;*/
+    height: 32px;
+    padding: 4px;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    background: #FFF;
+    /* Cards and elements/Inputs, Params cards */
+    box-shadow: 0px -1px 1px 0px rgba(36, 36, 93, 0.05), 0px 2px 3px 0px rgba(36, 36, 93, 0.10);
+    user-select: none;
+}
+
+.flow_li > img {
+    width: 100%;
+}
+
+/* this is for spacing in node list */
+.flow_items_container > div:not(:first-child) {
+    margin-top: 4px;
+}
+
+
+/* this is for vertical node connectors */
+.flow_node {
+    /*flex-flow: column;*/
+    /*display: flex;*/
+    width: 260px;
+    flex-direction: column;
+    /*align-items: flex-start;*/
+    border-radius: 4px;
+    border: 1px solid var(--basic);
+    max-width: 260px;
+    /*background: var(--white, #FFF);*/
+
+    /* Buttons/Hover secondary btn */
+    box-shadow: 0px 1px 12px 0px rgba(55, 32, 149, 0.08), 0px 2px 4px 0px rgba(84, 51, 181, 0.10);
+
+}
+
+/* this is for vertical node connectors */
+.flow_node > div.inputs > div.input {
+    transform: translate(-50%, -27px);
+    left: 0;
+    top: 0;
+}
+
+/* this is for vertical node connectors */
+.flow_node > div.outputs > div.output {
+    transform: translate(-50%, 30px);
+    right: 0;
+    top: 0;
+}
+
+.flow_node_properties_container {
+    width: 340px;
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100%;
+    border-radius: 0;
+    cursor: default;
+}
