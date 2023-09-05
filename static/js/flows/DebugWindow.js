@@ -8,7 +8,7 @@ const export1 = {
           "data": {
             "embedding": 2,
             "options": {
-              "properties_open": false
+              "properties_open": true
             }
           },
           "class": "flow_node",
