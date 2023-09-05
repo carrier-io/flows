@@ -15,7 +15,8 @@ const StartNodeComponent = {
         delete this.node_data.options
         Object.assign(this.$data, this.node_data || {})
         V.registered_components.DrawFlowStuff.editor.on('nodeSelected', id => {
-            if (this.node_id !== id) {
+            console.log('nodeSelected.StartNodeComponent', 'me:', this.node_id, 'selected:', id)
+            if (this.node_id !== parseInt(id)) {
                 this.options.properties_open = false
             }
         })
@@ -28,7 +29,9 @@ const StartNodeComponent = {
     },
     watch: {
         'options.properties_open': function (newValue) {
-            newValue && this.refresh_pickers()
+            if (newValue) {
+                this.refresh_pickers()
+            }
         }
     },
     template: `
@@ -45,8 +48,9 @@ const StartNodeComponent = {
                 </button>
             </div>
         </div>
-        <div class="card flow_node_properties_container" 
+        <div class="card flow_node_properties_container"
             v-if="options.properties_open"
+            :style="window.V.registered_components.DrawFlowStuff.getCanvasOffsetForPropertiesWindow()"
         >
             <div class="card-header d-flex">
                 <div class="flex-grow-1">

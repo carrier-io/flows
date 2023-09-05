@@ -35,8 +35,10 @@ const DrawFlowStuff = {
         // move properties window when canvas moves
         editor.on('translate', position => {
             const el = document.querySelector('.flow_node_properties_container')
-            el.style.top = `${-1 * position.y}px`
-            el.style.right = `${position.x}px`
+            if (el) {
+                el.style.top = `${-1 * position.y}px`
+                el.style.right = `${position.x}px`
+            }
         })
 
         editor.start()
@@ -97,6 +99,11 @@ const DrawFlowStuff = {
                 'vue'
             )
 
+        },
+        getCanvasOffsetForPropertiesWindow() {
+            const {canvas_x, canvas_y} = this.editor
+            console.log('called getCanvasOffsetForPropertiesWindow', {canvas_x, canvas_y})
+            return {top: `${-1 * canvas_y}px`, right: `${canvas_x}px`}
         }
     },
     template: `
