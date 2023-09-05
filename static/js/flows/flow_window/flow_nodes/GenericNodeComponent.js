@@ -10,8 +10,10 @@ const GenericNodeComponent = {
     mounted() {
         delete this.node_data.options
         Object.assign(this.$data, this.node_data || {})
+        // todo: this is an issue. need to clean editor events on node deletion
         V.registered_components.DrawFlowStuff.editor.on('nodeSelected', id => {
-            if (this.node_id !== id) {
+            console.log('nodeSelected.GenericNodeComponent', 'me:', this.node_id, 'selected:', id)
+            if (this.node_id !== parseInt(id)) {
                 this.options.properties_open = false
             }
         })
@@ -47,6 +49,7 @@ const GenericNodeComponent = {
         </div>
         <div class="card flow_node_properties_container" 
             v-if="options.properties_open"
+            :style="window.V.registered_components.DrawFlowStuff.getCanvasOffsetForPropertiesWindow()"
         >
             <div class="card-header d-flex">
                 <div class="flex-grow-1">
