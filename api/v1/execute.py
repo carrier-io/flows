@@ -19,6 +19,7 @@
 import flask
 from tools import api_tools
 from pylon.core.tools import log
+import uuid
 
 
 class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
@@ -27,6 +28,7 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
     def post(self, project_id: int):
         data = flask.request.json
         data['project_id'] = project_id
+        data['run_id'] = str(uuid.uuid4())
         self.module.context.event_manager.fire_event('run_workflow', data)
         return data, 200
 
