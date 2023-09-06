@@ -42,6 +42,9 @@ const EmbeddingSearchNode = {
         embeddings() {
             return V.custom_data.embeddings
         },
+        selectedEmbedding() {
+            return this.embeddings.find(i => i.id === this.embedding)
+        }
     },
     methods: {
         refresh_pickers() {
@@ -176,7 +179,7 @@ const EmbeddingSearchNode = {
             </div>
             
     
-            <div class="card-body pt-2 tab-content" style="border-top: 1px solid var(--gray200)">
+            <div class="card-body pt-2 tab-content overflow-auto" style="border-top: 1px solid var(--gray200)">
                 <div
                     class="tab-pane fade flex-grow-1 flex-column"
                     role="tabpanel"
@@ -264,6 +267,45 @@ const EmbeddingSearchNode = {
                             rows="5"
                             v-model="search_query"
                         />
+                    </div>
+                </div>
+                
+                <div
+                    class="tab-pane fade flex-grow-1 flex-column"
+                    role="tabpanel"
+                    :class="{'show': options.selectedTabIndex === 1, 'active': options.selectedTabIndex === 1}"
+                >
+                    <div class="flex-column">
+                        <div class="font-h6 text-gray-500 text-uppercase">
+                            Data Type
+                        </div>
+                        <div>
+                            {{ selectedEmbedding?.source_extension || '-' }}
+                        </div>
+                    </div>
+                    <div class="flex-column mt-3">
+                        <div class="font-h6 text-gray-500 text-uppercase">
+                            Columns
+                        </div>
+                        <div>
+                            {{ selectedEmbedding?.params?.columns.join(',') || '-' }}
+                        </div>
+                    </div>
+                    <div class="flex-column mt-3">
+                        <div class="font-h6 text-gray-500 text-uppercase">
+                            Tags
+                        </div>
+                        <div>
+                            {{ selectedEmbedding?.tags?.join(' ') || '-' }}
+                        </div>
+                    </div>
+                    <div class="flex-column mt-3">
+                        <div class="font-h6 text-gray-500 text-uppercase">
+                            Created At
+                        </div>
+                        <div>
+                            {{ selectedEmbedding?.created_at ? new Date(selectedEmbedding?.created_at).toLocaleString() : '-' }}
+                        </div>
                     </div>
                 </div>
                 
