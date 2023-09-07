@@ -1,5 +1,5 @@
 const FlowNode = {
-    props: ['idx', 'uid', 'tooltip', 'icon_url', 'icon_fa'],
+    props: ['idx', 'uid', 'tooltip', 'icon_url', 'icon_fa', 'name'],
     methods: {
         handleDrag(e) {
             console.log('dragging', e)

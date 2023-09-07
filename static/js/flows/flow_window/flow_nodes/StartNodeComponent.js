@@ -12,14 +12,7 @@ const StartNodeComponent = {
         }
     },
     mounted() {
-        delete this.node_data.options
-        Object.assign(this.$data, this.node_data || {})
-        V.registered_components.DrawFlowStuff.editor.on('nodeSelected', id => {
-            console.log('nodeSelected.StartNodeComponent', 'me:', this.node_id, 'selected:', id)
-            if (this.node_id !== parseInt(id)) {
-                this.options.properties_open = false
-            }
-        })
+        load_node_data(this)
     },
     computed: {},
     methods: {
@@ -28,6 +21,11 @@ const StartNodeComponent = {
         },
     },
     watch: {
+        'window.V.custom_data.selected_node': function(newValue) {
+            if (this.node_id !== newValue) {
+                this.options.properties_open = false
+            }
+        },
         'options.properties_open': function (newValue) {
             if (newValue) {
                 this.refresh_pickers()
@@ -50,7 +48,7 @@ const StartNodeComponent = {
         </div>
         <div class="card flow_node_properties_container"
             v-if="options.properties_open"
-            :style="window.V.registered_components.DrawFlowStuff.getCanvasOffsetForPropertiesWindow()"
+            :style="window.V.custom_data.properties_window_offset"
         >
             <div class="card-header d-flex">
                 <div class="flex-grow-1">

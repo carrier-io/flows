@@ -3,10 +3,7 @@ const FlowHandlersSection = {
     emits: ['update:modelValue'],
     data() {
         return {
-            failure_options: [
-                {value: 0, label: 'Stop Flow'},
-                {value: 1, label: 'Ignore'},
-            ]
+            failure_options: constants.on_failure_options
         }
     },
     template: `
@@ -20,10 +17,6 @@ const FlowHandlersSection = {
     </label>
     <label class="mt-2 d-flex flex-column">
         <span class="font-h5 font-weight-bold">on Failure</span>
-<!--        <input type="text" class="form-control w-100"-->
-<!--            v-model="modelValue.on_failure"-->
-<!--            placeholder="Variable name"-->
-<!--        />-->
         <select class="selectpicker bootstrap-select__b" 
             v-model="modelValue.on_failure"
         >

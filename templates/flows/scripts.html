@@ -3,6 +3,8 @@
 <script src="{{ url_for('design-system.static', filename='assets/vendor/nouislider/nouislider.js') }}"></script>
 <script src="{{ url_for('design-system.static', filename='assets/vendor/nouislider/wNumb.min.js') }}"></script>
 
+{# constants #}
+<script src="{{ url_for('flows.static', filename='js/flows/constants.js') }}"></script>
 
 {# nodes helpers #}
 <script src="{{ url_for('flows.static', filename='js/flows/flow_properties_components/VariablesInput.js') }}"></script>
@@ -12,6 +14,9 @@
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/GenericNodeComponent.js') }}"></script>
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/StartNodeComponent.js') }}"></script>
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/EmbeddingSearchNode.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/EmbeddingDeduplicateNode.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/EvaluateNode.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/PromptNode.js') }}"></script>
 
 {# nodes list items #}
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/FlowNodesContainer.js') }}"></script>

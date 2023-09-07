@@ -3,11 +3,7 @@ const VariablesInput = {
     emits: ['update:modelValue'],
     data() {
         return {
-            variable_types: [
-                {value: 0, label: 'str'},
-                {value: 1, label: 'num'},
-                {value: 2, label: 'json'},
-            ]
+            variable_types: constants.variable_types
         }
     },
     methods: {
@@ -25,7 +21,7 @@ const VariablesInput = {
     template: `
 <div>
     <div class="d-flex">
-        <span class="flex-grow-1 font-h6">Variables</span>
+        <span class="flex-grow-1 font-h5 font-weight-bold">Variables</span>
         <button class="btn btn-action btn-24"
             @click="handleAddVariable"
         >
