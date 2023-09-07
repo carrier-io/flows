@@ -11,23 +11,6 @@ from typing import Dict, List
 
 
 class RPC:
-    # Jira-related RPCs
-    @web.rpc("flowy_generate_steps_conf", "generate_steps_conf")
-    @rpc_tools.wrap_exceptions(RuntimeError)
-    def _generate_steps(self, data:Dict):
-        result: Dict[int, List[str]] = dict()
-        for task_id, conf in data.items():
-            if 'step' not in conf:
-                log.error("Invalid configuration data: step field doesn't exist")
-                return
-            step = conf['step']
-            if step in result:
-                result[step].append(task_id)
-                continue
-            result[step] = [task_id]
-        return dict(sorted(result.items()))
-
-
     @web.rpc("flowy_run_workflow", "run_workflow")
     @rpc_tools.wrap_exceptions(RuntimeError)
     def _run_workflow(self, data:Dict):
