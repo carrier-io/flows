@@ -5,7 +5,55 @@ from ..utils.evaluate import get_evaluater, EvaluateTemplate
 from time import sleep
 
 from pydantic import ValidationError
-from ..models.pd.flow import Variable
+from ..models.pd.flow import Variable, EvaluatePayload, StartPayload, PausePayload
+import re
+
+
+def handle_exceptions(fn):
+
+    def _is_special_value(value):
+
+        if not isinstance(value, str):
+            return False
+        
+        variable_pattern = r"([a-zA-Z0-9_]+)"
+        variables_pattern = r"{{variables\." + variable_pattern + r"}}"
+        prev_pattern = r"{{nodes\['"+ variable_pattern + r"'\]\.?" + variable_pattern + r"?}}"
+
+        if re.fullmatch(variables_pattern, value) or \
+            re.fullmatch(prev_pattern, value):
+            return True
+
+        return False
+
+    def decorated(self, payload):
+        try:
+            fn(self, payload)
+            return {"ok": True}
+        except ValidationError as e:
+            valid_erros = []
+            for error in e.errors():
+                log.info(f"ERROR: {error}")
+                if error['type'] == "value_error.missing" or "__root__" in error['loc']:
+                    valid_erros.append(error)
+                    continue
+                
+                invalid_value = {**payload}
+                for loc in error["loc"]:
+                    invalid_value = invalid_value[loc]
+                
+                # check for special values
+                if not _is_special_value(invalid_value):
+                    valid_erros.append(error)
+
+            if valid_erros:
+                return {"ok": False, "errors": valid_erros}
+            return {"ok": True}
+        except Exception as e:
+            # log.error(e)
+            return {"ok": False, "error": str(e)}
+        
+    return decorated
 
 
 class RPC:
@@ -35,7 +83,7 @@ class RPC:
         return {"ok": True, 'result': response.json()}
 
 
-    @web.rpc("flowy_evaluate", "eveluate")
+    @web.rpc("flowy_evaluate", "evaluate")
     @rpc_tools.wrap_exceptions(RuntimeError)
     @tasklib.task("flowy_evaluate", {
         "query":tasklib.TEXTAREA_INPUT,
@@ -52,6 +100,12 @@ class RPC:
         return {"ok": True, 'result': result}
 
 
+    @web.rpc("flowy_evaluate__validate", "evaluate__validate")
+    @tasklib.task("flowy_evaluate__validate", {})
+    @handle_exceptions
+    def _validate_evaluate(self, payload):
+        return EvaluatePayload.validate(payload)
+
     @web.rpc("flowy_pause", "pause")
     @rpc_tools.wrap_exceptions(RuntimeError)
     @tasklib.task("flowy_pause", {})
@@ -63,6 +117,13 @@ class RPC:
             log.error(e)
             return {"ok": False, "error": str(e)}
         return {"ok": True, 'result': {}}
+    
+
+    @web.rpc("flowy_pause__validate", "pause__validate")
+    @tasklib.task("flowy_pause__validate", {})
+    @handle_exceptions
+    def _validate_pause(self, payload):
+        return PausePayload.validate(payload)
 
 
     @web.rpc("flowy_start_flow", "start_flow")
@@ -78,4 +139,12 @@ class RPC:
             except ValidationError as e:
                 return {"ok": False, "error": f"Error: {e}", "errors": e.errors()}
         return {"ok": True, 'result': variable_dict}
+
+
+    @web.rpc("flowy_start_flow__validate", "start_flow__validate")
+    @tasklib.task("flowy_start_flow__validate", {})
+    @handle_exceptions
+    def _validate_start_flow(self, payload):
+        return StartPayload.validate(payload)
+
 

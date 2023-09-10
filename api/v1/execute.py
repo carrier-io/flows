@@ -20,6 +20,7 @@ import flask
 from tools import api_tools
 from pylon.core.tools import log
 import uuid
+from ...utils.flow import FlowValidator
 
 
 class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
@@ -29,8 +30,17 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
         data = flask.request.json
         data['project_id'] = project_id
         data['run_id'] = str(uuid.uuid4())
+        # data['run_id'] = '24c96b03-eab5-43c8-9257-d8bbe76295b5'
+        
+        validator = FlowValidator(self.module, data)
+        errors = validator.validate()
+        if errors:
+            response = {"ok": False, "errors": errors}
+            return response, 400
+        
+        data['variables'] = validator.variables
         self.module.context.event_manager.fire_event('run_workflow', data)
-        return data, 200
+        return {"ok": True, "result": data}, 200
 
 
 class AdminAPI(api_tools.APIModeHandler):
