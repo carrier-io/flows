@@ -1,6 +1,5 @@
 import re
 import os
-import re
 import json
 from pathlib import Path
 from threading import Thread, Lock
@@ -32,9 +31,12 @@ class FlowValidator:
         rpc_obj = getattr(self.context.rpc_manager.call, rpc_name)
         
         # calling rpc
-        result = rpc_obj(task_config['params'])
-        if result['ok']:
-            return
+        try:
+            result = rpc_obj(**task_config['params'])
+            if result['ok']:
+                return
+        except Exception as e:
+            errors = f"Error happened during validation:\n {e}"
         
         try:
             errors = result.get('errors') if "errors" in result else result['error']
@@ -72,6 +74,8 @@ class FlowValidator:
 
 
 class Flow:
+    SKIP_CHAR = "skip"
+
     def __init__(self, module, data):
         self.module = module
         self.context = module.context
@@ -86,18 +90,23 @@ class Flow:
         folder_path = os.path.join(os.getcwd(), self.run_id)
         for parent in parents:
             parent_path = os.path.join(folder_path, f"{parent}_out.json")
-
+            skip = self.tasks.get(parent, {}).get('on_failure') == self.SKIP_CHAR
+            
             if not os.path.exists(parent_path):
+                if skip:
+                    continue
                 raise PreviousTaskFailed("Previous task failed")
             
             file = open(parent_path, 'r')
             content = json.load(file)
             
             if not content.get("ok"):
+                if skip:
+                    continue
                 raise PreviousTaskFailed("Previous task failed")
             
             name = self.tasks[parent]['name']
-            prev_values[name] = content["result"] if content['ok'] else {}
+            prev_values[name] = content["result"]
             file.close()
         return prev_values
 
@@ -193,7 +202,8 @@ class Flow:
         result["rpc_name"] = meta["rpc_name"]
         result["task_id"] = task_id
         result["run_id"] = self.run_id
-        self.context.event_manager.fire_event("task_executed", result)
+        if (meta.get('log_results') and result['ok']) or not result['ok']:
+            self.context.event_manager.fire_event("task_executed", result)
         
         log.info(f"Completed: {task_id}")
         
@@ -208,7 +218,7 @@ class Flow:
         #### MAIN
         log.info("FLOW STARTED...")
         self.context.sio.emit("flow_started", {"msg": "Workflow is started", "run_id": self.run_id})
-        output = self.data.pop('output')
+        output = self.data.pop('output', None)
 
         # creating folder for this flow run
         folder_path = os.path.join(os.getcwd(), self.run_id)

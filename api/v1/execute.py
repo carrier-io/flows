@@ -21,6 +21,7 @@ from tools import api_tools
 from pylon.core.tools import log
 import uuid
 from ...utils.flow import FlowValidator
+from ...utils.parser import FlowParser, InvalidTaskNames
 
 
 class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
@@ -28,19 +29,34 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
 
     def post(self, project_id: int):
         data = flask.request.json
-        data['project_id'] = project_id
-        data['run_id'] = str(uuid.uuid4())
-        # data['run_id'] = '24c96b03-eab5-43c8-9257-d8bbe76295b5'
+
+        try:
+            parser = FlowParser(data)
+            backend_config = parser.parse()
+        except InvalidTaskNames as e:
+            return {
+                "ok": False, 
+                "error": {
+                    "msg": str(e),
+                    "invalid_names": e.invalid_names,
+                }, 
+                "type": "parse_error"
+            }
+
+
+        backend_config['project_id'] = project_id
+        backend_config['run_id'] = str(uuid.uuid4())
+        # backend_config['run_id'] = '24c96b03-eab5-43c8-9257-d8bbe76295b5'
         
-        validator = FlowValidator(self.module, data)
+        validator = FlowValidator(self.module, backend_config)
         errors = validator.validate()
         if errors:
-            response = {"ok": False, "errors": errors}
+            response = {"ok": False, "errors": errors, "type": "validation_error"}
             return response, 400
         
-        data['variables'] = validator.variables
-        self.module.context.event_manager.fire_event('run_workflow', data)
-        return {"ok": True, "result": data}, 200
+        backend_config['variables'] = validator.variables
+        self.module.context.event_manager.fire_event('run_workflow', backend_config)
+        return {"ok": True, "result": backend_config}, 200
 
 
 class AdminAPI(api_tools.APIModeHandler):
