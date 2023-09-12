@@ -1,6 +1,6 @@
 {
-  "name": "Pylon Prompts plugin",
+  "name": "Pylon Flow plugin",
   "version": "0.1",
-  "depends_on": ["integrations"],
+  "depends_on": ["projects", "theme"],
   "init_after": []
 }

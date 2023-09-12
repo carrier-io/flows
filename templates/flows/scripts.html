@@ -3,15 +3,21 @@
 <script src="{{ url_for('design-system.static', filename='assets/vendor/nouislider/nouislider.js') }}"></script>
 <script src="{{ url_for('design-system.static', filename='assets/vendor/nouislider/wNumb.min.js') }}"></script>
 
+{# constants #}
+<script src="{{ url_for('flows.static', filename='js/flows/constants.js') }}"></script>
 
 {# nodes helpers #}
 <script src="{{ url_for('flows.static', filename='js/flows/flow_properties_components/VariablesInput.js') }}"></script>
 <script src="{{ url_for('flows.static', filename='js/flows/flow_properties_components/FlowHandlersSection.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_properties_components/ConnectedSlider.js') }}"></script>
 
 {# flow nodes #}
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/GenericNodeComponent.js') }}"></script>
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/StartNodeComponent.js') }}"></script>
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/EmbeddingSearchNode.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/EmbeddingDeduplicateNode.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/EvaluateNode.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/flow_window/flow_nodes/PromptNode.js') }}"></script>
 
 {# nodes list items #}
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/FlowNodesContainer.js') }}"></script>
@@ -22,7 +28,9 @@
 <script src="{{ url_for('flows.static', filename='js/flows/flow_window/FlowWindow.js') }}"></script>
 
 {# left window scripts #}
-<script src="{{ url_for('flows.static', filename='js/flows/LeftWindow.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/left_window/CreateFlowModal.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/left_window/FlowsTable.js') }}"></script>
+<script src="{{ url_for('flows.static', filename='js/flows/left_window/LeftWindow.js') }}"></script>
 
 {# main (middle) container scripts #}
 <script src="{{ url_for('flows.static', filename='js/flows/MainContainer.js') }}"></script>

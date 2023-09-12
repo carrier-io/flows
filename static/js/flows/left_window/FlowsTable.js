@@ -1,10 +1,7 @@
 const handleDeleteFlow = async (el, id) => {
     window.event.stopPropagation()
-    console.log('deleting flow with id', id ,el)
-    showNotify('INFO', `Deleting flow ${id}`)
-    return
-    const apiUrl = V.build_api_url('flows', 'flows')
-    const resp = await fetch(apiUrl + '/' + V.project_id + '/' + id, {
+    const api_url = V.build_api_url('flows', 'flow')
+    const resp = await fetch(api_url + '/' + V.project_id + '/' + id, {
         method: 'DELETE'
     })
     if (resp.ok) {
@@ -26,7 +23,7 @@ const FlowsTable = {
     emits: ['selectFlow'],
     data() {
         return {
-            mock_data: Array.from(Array(10)).map((_, i) => ({id: i, name: 'flow ' + i}))
+            is_loading: false,
         }
     },
     mounted() {
@@ -37,13 +34,26 @@ const FlowsTable = {
         })
     },
     methods: {
+        handleSelectRow(tr, data) {
+            const $table = $(this.$refs.table)
+            $table.find('tr').removeClass('highlight')
+            $(tr).addClass('highlight')
+            this.$emit('selectFlow', data)
+        },
         handleRowClick(row, element, field) {
-            $(this.$refs.table).find('tr').removeClass('highlight')
-            $(field[0]).addClass('highlight')
-            this.$emit('selectFlow', element)
+            this.handleSelectRow(field[0], element)
         },
         refresh() {
             $(this.$refs.table).bootstrapTable('refresh')
+        },
+        handleNewFlow(flow_data) {
+            const $table = $(this.$refs.table)
+            const new_row = $table.bootstrapTable('insertRow', {
+                index: 0,
+                row: flow_data
+            })
+            console.log('new_row', new_row)
+            this.handleSelectRow($table.find(`tr[data-uniqueid="${flow_data.id}"`), flow_data)
         }
     },
     computed: {
@@ -55,7 +65,7 @@ const FlowsTable = {
     template: `
     <table
         class="table table-borderless"
-        :data-data="JSON.stringify(mock_data)"
+        :data-url="tableUrl"
         data-toggle="table"
         data-unique-id="id"
         data-virtual-scroll="true"
@@ -66,7 +76,6 @@ const FlowsTable = {
         
         ref="table"
     >
-<!--        :data-url="tableUrl"-->
         <thead class="thead-light">
             <tr>
                 <th data-visible="false" data-field="id">id</th>
@@ -77,33 +86,4 @@ const FlowsTable = {
         </thead>
     </table>
     `
-}
-const LeftWindow = {
-    emits: ['update:modelValue'],
-    components: {
-        FlowsTable,
-    },
-    template: `
-<div class="card side-window">
-    <pre class="tmp-helper">LeftWindow.js</pre>
-    <div class="card-header d-flex">
-        <div class="flex-grow-1 font-h4 font-bold">
-            Embeddings
-        </div>
-        <div>
-            <button class="btn btn-32 btn-secondary" 
-                data-toggle="modal" data-target="#create_embedding"
-            >
-                <i class="fa fa-plus"></i>
-            </button>
-        </div>
-    </div>
-    <div>
-        <FlowsTable
-            @selectFlow="data => $emit('update:modelValue', data)"
-        ></FlowsTable>
-<!--            ref="eTable"-->
-    </div>
-</div>
-`
 }

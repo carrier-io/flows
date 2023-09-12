@@ -11,9 +11,9 @@ const MainContainer = {
     },
     template: `
 <div class="m-3 d-flex" id="container-window">
-    <LeftWindow class="mr-3" v-model="selectedFlow" style="display: none;"></LeftWindow>
-    <DebugWindow class="mr-3"></DebugWindow>
-    <FlowWindow :selectedFlow="selectedFlow"></FlowWindow>
+    <LeftWindow class="mr-3" v-model="selectedFlow"></LeftWindow>
+    <DebugWindow class="mr-3" v-if="false"></DebugWindow>
+    <FlowWindow :selectedFlow="selectedFlow" v-show="selectedFlow"></FlowWindow>
 </div>
 `
 }

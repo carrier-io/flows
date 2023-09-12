@@ -1,42 +1,48 @@
 [
    {
-      "uid":"start",
-      "name":"Start",
-      "tooltip":"start block",
-      "icon_fa":"fa fa-terminal fa-xl",
-      "inputs":0,
-      "outputs":1
+      "uid": "start",
+      "name": "Start",
+      "tooltip": "Start block",
+      "icon_fa": "fa fa-terminal fa-xl",
+      "inputs": 0,
+      "outputs": 1
    },
    {
-      "tooltip":"Search with embeddings",
-      "icon_url":"/flows/static/icons/embed_search.svg",
       "uid":"search",
-      "name": "Embedding Search"
+      "name": "Embedding Search",
+      "tooltip":"Search with embeddings",
+      "icon_url":"/flows/static/icons/embed_search.svg"
    },
    {
-      "tooltip":"embed_deduplicate.svg",
-      "icon_url":"/flows/static/icons/embed_deduplicate.svg",
       "uid":"deduplicate",
-      "name":"deduplicate"
+      "name":"Deduplicate",
+      "tooltip":"Deduplicate embeddings",
+      "icon_url":"/flows/static/icons/embed_deduplicate.svg"
    },
    {
-      "tooltip":"evaluate.svg",
-      "icon_url":"/flows/static/icons/evaluate.svg",
-      "uid":"evaluate"
+      "uid":"evaluate",
+      "name":"evaluate",
+      "tooltip":"Format output",
+      "icon_url":"/flows/static/icons/evaluate.svg"
    },
    {
-      "tooltip":"pause.svg",
-      "icon_url":"/flows/static/icons/pause.svg",
-      "uid":"pause"
+      "uid":"pause",
+      "name":"pause",
+      "tooltip":"Delay",
+      "icon_url":"/flows/static/icons/pause.svg"
    },
    {
-      "tooltip":"prompt.svg",
-      "icon_url":"/flows/static/icons/prompt.svg",
-      "uid":"prompt"
+      "uid":"prompt",
+      "name":"prompt",
+      "tooltip":"Prompt predict",
+      "icon_url":"/flows/static/icons/prompt.svg"
    },
    {
-      "tooltip":"stop.svg",
+      "uid":"stop",
+      "name":"stop",
+      "tooltip":"Terminate",
       "icon_url":"/flows/static/icons/stop.svg",
-      "uid":"stop"
+      "inputs":1,
+      "outputs":0
    }
 ]

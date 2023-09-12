@@ -96,3 +96,21 @@
     border-radius: 0;
     cursor: default;
 }
+
+#CreateFlowModal {
+    min-width: 500px;
+}
+
+.loadingOverlay {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.28);
+    position: absolute;
+    z-index: 300;
+    text-align: center;
+}
+
+.loadingOverlay > span {
+    position: absolute;
+    top: 50%;
+}
