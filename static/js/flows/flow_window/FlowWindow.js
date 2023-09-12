@@ -51,9 +51,11 @@ const FlowWindow = {
         <div>
             <button class="btn btn-secondary mr-2"
                 @click="handleSaveFlow"
+                :disabled="is_loading"
             >Save</button>
             <button class="btn btn-basic"
                 @click="handleRunFlow"
+                :disabled="is_loading"
             >Run</button>
         </div>
     </div>
