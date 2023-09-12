@@ -34,7 +34,7 @@
    {
       "uid":"prompt",
       "name":"prompt",
-      "tooltip":"Predict",
+      "tooltip":"Prompt predict",
       "icon_url":"/flows/static/icons/prompt.svg"
    },
    {

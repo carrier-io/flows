@@ -132,7 +132,109 @@ const export2 = {
     }
   }
 }
-const export_current = export2
+const export3 = {
+  "drawflow": {
+    "Home": {
+      "data": {
+        "1": {
+          "id": 1,
+          "name": "start",
+          "data": {
+            "variables": []
+          },
+          "class": "flow_node",
+          "html": "start",
+          "typenode": "vue",
+          "inputs": {},
+          "outputs": {
+            "output_1": {
+              "connections": [
+                {
+                  "node": "2",
+                  "output": "input_1"
+                }
+              ]
+            }
+          },
+          "pos_x": 186,
+          "pos_y": 34
+        },
+        "2": {
+          "id": 2,
+          "name": "prompt",
+          "data": {
+            "flow_handle_settings": {
+              "on_success": "some",
+              "on_failure": 0,
+              "log_results": false
+            },
+            "prompt_name": "another_one",
+            "prompt_id": 5,
+            "variables": [
+              {
+                "name": "var1",
+                "type": "string",
+                "value": "val1",
+                "prompt_id": 5
+              },
+              {
+                "name": "qaz",
+                "type": "string",
+                "value": "rfv",
+                "prompt_id": 5
+              },
+              {
+                "name": "custom1",
+                "type": "string",
+                "value": "v1"
+              },
+              {
+                "name": "cus2",
+                "type": "string",
+                "value": "v2"
+              }
+            ],
+            "prompt_input": "modifyed",
+            "integration_uid": "qwe-rty",
+            "model_settings": {
+              "api_token": {
+                "from_secrets": true,
+                "value": "{{secret.api_token_default_2}}"
+              },
+              "model_name": "gpt-35-turbo",
+              "api_version": "2023-03-15-preview",
+              "api_base": "https://correct.url.com",
+              "temperature": 0,
+              "max_tokens": 7,
+              "top_p": 0.8
+            }
+          },
+          "class": "flow_node",
+          "html": "prompt",
+          "typenode": "vue",
+          "inputs": {
+            "input_1": {
+              "connections": [
+                {
+                  "node": "1",
+                  "input": "output_1"
+                }
+              ]
+            }
+          },
+          "outputs": {
+            "output_1": {
+              "connections": []
+            }
+          },
+          "pos_x": 184,
+          "pos_y": 188
+        }
+      }
+    }
+  }
+}
+const export_current = export3
 
 function customStringify(obj) {
   let cache = [];
@@ -194,8 +296,8 @@ const DebugWindow = {
             <button class="btn" @click="editor.clear()">clear</button>
             <button class="btn" @click="e_state = window.customStringify(editor)">get editor state</button>
         </div>
-        <textarea class="flex-grow-1" v-model="ta_1"></textarea>
-        <textarea class="flex-grow-1">{{ e_state }}</textarea>
+        <textarea id="debug1" class="flex-grow-1" v-model="ta_1"></textarea>
+        <textarea id="debug2" class="flex-grow-1">{{ e_state }}</textarea>
     </div>
 </div>
 `

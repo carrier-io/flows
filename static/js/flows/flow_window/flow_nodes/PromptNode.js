@@ -3,6 +3,7 @@ const PromptNode = {
     components: {
         'FlowHandlersSection': Vue.markRaw(FlowHandlersSection),
         'VariablesInput': Vue.markRaw(VariablesInput),
+        'ConnectedSlider': Vue.markRaw(ConnectedSlider),
     },
     data() {
         return {
@@ -11,13 +12,19 @@ const PromptNode = {
                 on_failure: 0,
                 log_results: false
             },
+            prompt_name: null,
+            prompt_id: null,
             variables: [],
             prompt_input: '',
+            integration_uid: null,
+            model_settings: {},
             options: {
                 properties_open: false,
                 selectedTabIndex: 0,
                 tabs: ['Data', 'Advanced', 'Logs'],
-                logs: 'Logs will be here'
+                logs: 'Logs will be here',
+                is_loading: false,
+                tags: [],
             }
         }
     },
@@ -31,8 +38,19 @@ const PromptNode = {
         prompts() {
             return V.custom_data.prompts
         },
-        selectedEmbedding() {
-            return this.prompts.find(i => i.id === this.embedding)
+        ai_integrations() {
+            return V.custom_data.ai_integrations
+        },
+        promptsList() {
+            return this.prompts ? Object.keys(this.prompts) : []
+        },
+        promptVersions() {
+            return this.prompts && this.prompts[this.prompt_name] || []
+        },
+        debugValue() {
+            const val = {...this.$data}
+            delete val.options
+            return val
         }
     },
     methods: {
@@ -40,24 +58,96 @@ const PromptNode = {
             this.$nextTick(() => $(this.$el).find('.selectpicker').selectpicker('refresh'))
         },
         async fetchPrompts() {
-            const api_url = V.build_api_url('prompts', 'prompts')
+            this.options.is_loading = true
+            const api_url = V.build_api_url('prompts', 'flows')
             const resp = await fetch(api_url + '/' + V.project_id)
+            this.options.is_loading = false
             if (resp.ok) {
                 V.custom_data.prompts = await resp.json()
             } else {
-                showNotify('ERROR', 'Error fetching embeddings')
+                showNotify('ERROR', 'Error fetching prompts')
             }
             this.refresh_pickers()
         },
+        async fetchIntegrations() {
+            this.options.is_loading = true
+            const api_url = V.build_api_url('integrations', 'integrations')
+            const resp = await fetch(api_url + '/' + V.project_id + '?section=ai')
+            this.options.is_loading = false
+            if (resp.ok) {
+                V.custom_data.ai_integrations = await resp.json()
+            } else {
+                showNotify('ERROR', 'Error fetching ai integrations')
+            }
+            this.refresh_pickers()
+        },
+        async fetchPromptDetails(prompt_id) {
+            this.options.is_loading = true
+            const api_url = V.build_api_url('prompts', 'prompt')
+            const resp = await fetch(api_url + '/' + V.project_id + '/' + prompt_id)
+            this.options.is_loading = false
+            if (resp.ok) {
+                return await resp.json()
+            } else {
+                showNotify('ERROR', 'Error fetching prompt details for prompt ' + prompt_id)
+            }
+        },
     },
     watch: {
-        'window.V.custom_data.selected_node': function(newValue) {
+        'window.V.custom_data.selected_node': function (newValue) {
             if (this.node_id !== newValue) {
                 this.options.properties_open = false
             }
         },
         'options.properties_open': function (newValue) {
             if (newValue) {
+                this.refresh_pickers()
+            }
+        },
+        prompt_name(newValue) {
+            // if (!this.node_data.prompt_id) {
+                const new_prompt_id = this.promptVersions[0]?.id || null
+            if (new_prompt_id) {
+                this.prompt_id = new_prompt_id
+                // double refresh here because stupid selectpicker won't work another way
+                this.refresh_pickers()
+                this.refresh_pickers()
+            }
+            // }
+        },
+        async prompt_id(newValue) {
+            const prompt_details = newValue ? await this.fetchPromptDetails(newValue) : {}
+            const {variables, test_input, tags, integration_uid, model_settings} = prompt_details
+
+            this.variables = [
+                ...this.variables.filter(i => i.prompt_id === undefined),
+                ...variables.map(({name, value}) => ({
+                    name,
+                    type: constants.variable_types[0].value,
+                    value,
+                    prompt_id: newValue
+                }))
+            ]
+            if (!this.node_data.prompt_input) {
+                this.prompt_input = test_input
+            }
+            this.options.tags = tags.map(({tag, color}) => ({tag, color}))
+            if (!this.node_data.integration_uid) {
+                this.integration_uid = integration_uid
+            }
+
+            if (!this.node_data.model_settings) {
+                this.model_settings = model_settings
+            }
+
+            this.refresh_pickers()
+
+            $('#debug2').val(JSON.stringify(prompt_details, null, 2))
+        },
+        'options.selectedTabIndex': async function (newValue) {
+            console.log('selected tab ', newValue)
+            if (newValue === 1) {
+                this.ai_integrations === undefined && await this.fetchIntegrations()
                 this.refresh_pickers()
             }
         },
@@ -81,19 +171,31 @@ const PromptNode = {
         <div class="d-flex flex-column" style="border-top: 1px solid var(--gray200)">
             <div class="d-flex flex-column p-3">
                 <select class="selectpicker" data-style="select-secondary" 
-                    v-model="prompt"
+                    v-model="prompt_name"
                 >
-                    <option v-for="i in embeddings" :value="i.id" :key="i.id">
-                        {{ i.name }}
+                    <option v-for="i in promptsList" :value="i" :key="i">
+                        {{ i }}
                     </option>
                 </select>
+                
+                <label class="d-flex align-items-center">
+                    <span class="font-h6">Version: </span>
+                    <select class="selectpicker flex-grow-1 ml-2" data-style="select-secondary" 
+                        v-model="prompt_id"
+                        :disabled="!prompt_name"
+                    >
+                        <option v-for="i in promptVersions" :value="i.id" :key="i.id">
+                            {{ i.version }}
+                        </option>
+                    </select>
+                </label>
             </div>
         </div>
         
         <pre v-if="false" style="font-size: 7px">
             id: {{node_id}}
             <br/>
-            {{$data}}
+            {{debugValue}}
         </pre>
         
         <div class="card flow_node_properties_container"
@@ -153,7 +255,16 @@ const PromptNode = {
                     </div>
                     
                     <div class="mt-2">
-                        tags here
+                        <div class="flex-grow-1">
+                            <span class="font-h5 font-bold">Tags</span>
+                        </div>
+                        <span class="btn btn-xs btn-painted rounded-pill mb-1 mr-1"
+                            v-for="tag in options.tags"
+                            style="max-width: 100px; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; cursor: default"
+                            :style="{'--text-color': tag.color, '--brd-color': tag.color}"
+                        >
+                            {{ tag.tag }}
+                        </span>
                     </div>
                 </div>
                 
@@ -162,38 +273,68 @@ const PromptNode = {
                     role="tabpanel"
                     :class="{'show': options.selectedTabIndex === 1, 'active': options.selectedTabIndex === 1}"
                 >
-                    <div class="flex-column">
-                        <div class="font-h6 text-gray-500 text-uppercase">
-                            Data Type
-                        </div>
-                        <div>
-                            {{ selectedEmbedding?.source_extension || '-' }}
-                        </div>
+                    <label class="mt-2 d-flex flex-column">
+                        <span class="font-h5 font-weight-bold">Integration</span>
+                        <select class="selectpicker bootstrap-select__b" 
+                            v-model="integration_uid"
+                        >
+                            <option 
+                                v-for="i in ai_integrations" 
+                                :value="i.uid"
+                            >
+                                {{ i?.config?.name }}
+                            </option>
+                        </select>
+                    </label>
+                    
+                    <div class="mt-2">
+                        <span class="font-h5 font-weight-bold">Temperature</span>
+                        <ConnectedSlider 
+                            v-if="options.selectedTabIndex === 1"
+                            v-model="model_settings.temperature"
+                            :min="0"
+                            :max="1"
+                            :step="0.01"
+                        ></ConnectedSlider>
                     </div>
-                    <div class="flex-column mt-3">
-                        <div class="font-h6 text-gray-500 text-uppercase">
-                            Columns
-                        </div>
-                        <div>
-                            {{ selectedEmbedding?.params?.columns.join(',') || '-' }}
-                        </div>
+                    
+                    <div class="mt-2">
+                        <span class="font-h5 font-weight-bold">Token limit</span>
+                        <ConnectedSlider 
+                            v-if="options.selectedTabIndex === 1"
+                            v-model="model_settings.max_tokens"
+                            :min="1"
+                            :max="32000"
+                            :step="1"
+                            :format="window.wNumb({decimals: 0})"
+                        ></ConnectedSlider>
                     </div>
-                    <div class="flex-column mt-3">
-                        <div class="font-h6 text-gray-500 text-uppercase">
-                            Tags
-                        </div>
-                        <div>
-                            {{ selectedEmbedding?.tags?.join(' ') || '-' }}
-                        </div>
+                    
+                    <div class="mt-2"
+                        v-if="options.selectedTabIndex === 1 && model_settings.top_k"
+                    >
+                        <span class="font-h5 font-weight-bold">Top-K</span>
+                        <ConnectedSlider 
+                            v-model="model_settings.top_k"
+                            :min="0"
+                            :max="100"
+                            :step="1"
+                        ></ConnectedSlider>
                     </div>
-                    <div class="flex-column mt-3">
-                        <div class="font-h6 text-gray-500 text-uppercase">
-                            Created At
-                        </div>
-                        <div>
-                            {{ selectedEmbedding?.created_at ? new Date(selectedEmbedding?.created_at).toLocaleString() : '-' }}
-                        </div>
+                    
+                    <div class="mt-2"
+                        v-if="options.selectedTabIndex === 1 && model_settings.top_p"
+                    >
+                        <span class="font-h5 font-weight-bold">Top-P</span>
+                        <ConnectedSlider 
+                            v-model="model_settings.top_p"
+                            :min="0"
+                            :max="1"
+                            :step="0.01"
+                        ></ConnectedSlider>
                     </div>
+                    
+                    
                 </div>
                 
                 <div

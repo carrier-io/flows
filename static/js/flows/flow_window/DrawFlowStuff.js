@@ -11,11 +11,13 @@ const getVueComponent = uid => {
 }
 
 const DrawFlowStuff = {
-    props: ['flow_blocks'],
+    props: ['flow_blocks', 'selectedFlow'],
     data() {
         return {
             editor: undefined,
             dropAreaStyle: {},
+            is_loading: false,
+            loadingOverlayVisible: false
         }
     },
     mounted() {
@@ -40,11 +42,6 @@ const DrawFlowStuff = {
 
         // move properties window when canvas moves
         editor.on('translate', position => {
-            // const el = document.querySelector('.flow_node_properties_container')
-            // if (el) {
-            //     el.style.top = `${-1 * position.y}px`
-            //     el.style.right = `${position.x}px`
-            // }
             this.$root.custom_data.properties_window_offset = {
                 top: `${-1 * position.y}px`,
                 right: `${position.x}px`
@@ -66,9 +63,41 @@ const DrawFlowStuff = {
             newValue.forEach(i => {
                 this.editor.registerNode(i.uid, Vue.markRaw(getVueComponent(i.uid)), {node_meta: i}, {});
             })
+        },
+        async selectedFlow(newValue) {
+            console.log('new flow selected', newValue)
+            this.editor.clear()
+            const {id} = newValue
+            // if (!flow_data) {
+            //     flow_data = await this.fetchFlowDetails(id)
+            //     flow_data = flow_data.flow_data
+            // }
+            const {flow_data} = await this.fetchFlowDetails(id)
+
+            flow_data && this.editor.import(flow_data)
+
+        },
+        is_loading(newValue) {
+            if (!newValue) {
+                this.loadingOverlayVisible = false
+            }
+            setTimeout(() => {
+                this.loadingOverlayVisible = this.is_loading
+            }, 1000)
         }
     },
     methods: {
+        async fetchFlowDetails(flow_id) {
+            const api_url = this.$root.build_api_url('flows', 'flow')
+            this.is_loading = true
+            const resp = await fetch(api_url + '/' + this.$root.project_id + '/' + flow_id)
+            this.is_loading = false
+            if (resp.ok) {
+                return await resp.json()
+            } else {
+                showNotify('ERROR', 'Can\'t load flow')
+            }
+        },
         // handleBtn() {
         //     console.log('clicked')
         //     // this.editor.addModule('nameNewModule');
@@ -121,37 +150,11 @@ const DrawFlowStuff = {
         :style="dropAreaStyle"
         @drop.prevent="handleDrop" 
         @dragover.prevent="dropAreaStyle = {border: '1px dashed var(--basic)'}"
-    ></div>
-<!--<div class="w-100 h-100">-->
-    
-<!--    <div class="modal modal-small fixed-left fade shadow-sm" tabindex="-1" role="dialog" id="testDetailsModal">-->
-<!--        <div class="modal-dialog modal-dialog-aside" role="document">-->
-<!--            <div class="modal-content">-->
-<!--                <div class="modal-header">-->
-<!--                    <div class="row w-100">-->
-<!--                        <div class="col">-->
-<!--                            <p class="font-h3 font-weight-bold">Small Modal</p>-->
-<!--                        </div>-->
-<!--                        <div class="col-xs">-->
-<!--                            <button type="button" class="btn mr-2 btn-secondary" data-dismiss="modal" aria-label="Close">-->
-<!--                                Cancel-->
-<!--                            </button>-->
-<!--                            <button type="button" id="save" class="btn   btn-basic">Primary button</button>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--                <div class="modal-body">-->
-<!--                    <div class="section">-->
-<!--                        <div class="row">-->
-<!--                            <div class="col" style="background-color: dimgrey; min-height: 500px;"></div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
-
-<!--</div>-->
+    >
+        <div class="loadingOverlay" v-show="loadingOverlayVisible ">
+            <span class="font-h1">Loading</span>
+        </div>
+    </div>
     `
 }
 
