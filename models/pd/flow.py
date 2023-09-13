@@ -15,9 +15,9 @@ class WorkflowUpdateModel(WorkflowModel):
 
 
 class EvaluatePayload(BaseModel):
-    query: str 
+    eval_input: str
     payload: dict 
-    output_format: Optional[str] = "string"
+    output_type: Optional[str] = "string"
 
 
 class PausePayload(BaseModel):

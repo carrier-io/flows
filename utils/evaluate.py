@@ -1,3 +1,4 @@
+import json
 from traceback import format_exc
 from typing import List, Dict
 from abc import ABCMeta, abstractmethod
@@ -11,14 +12,15 @@ class TransformationError(Exception):
 
 class MyABC(ABCMeta):
     meta_registry = {}
-    def __new__(cls, name, bases, attrs):
-        resulting_class = super().__new__(cls, name, bases, attrs)
-        if bases: # exlcuding parent class
+
+    def __new__(mcs, name, bases, attrs):
+        resulting_class = super().__new__(mcs, name, bases, attrs)
+        if bases:  # exlcuding parent class
             name = name.split('TransformerEvaluate')[0].lower()
-            cls.meta_registry[name] = resulting_class
+            mcs.meta_registry[name] = resulting_class
             resulting_class._output_format = name
         return resulting_class
-    
+
 
 class EvaluateTemplate(metaclass=MyABC):
     def __init__(self, module, query: str, payload: dict, output_format: str):
@@ -71,7 +73,7 @@ class StringTransformerEvaluate(EvaluateTemplate):
 class IntegerTransformerEvaluate(EvaluateTemplate):
     def transform(self, value):
         return int(float(value))
-        
+
 
 class FloatTransformerEvaluate(EvaluateTemplate):
     def transform(self, value):
@@ -83,6 +85,11 @@ class NoTransformerEvaluate(EvaluateTemplate):
         return value
 
 
+class JsonTransformerEvaluate(EvaluateTemplate):
+    def transform(self, value: str) -> dict:
+        return json.loads(value)
+
+
 # Evaluate Factory:
-def get_evaluater(format):
-    return MyABC.meta_registry.get(format, NoTransformerEvaluate)
+def get_evaluator(output_type: str):
+    return MyABC.meta_registry.get(output_type, NoTransformerEvaluate)

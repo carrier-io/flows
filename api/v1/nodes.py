@@ -14,7 +14,7 @@ class ProjectAPI(api_tools.APIModeHandler):
         }})
     def get(self, project_id: int):
 
-        return list(flow_tools._registry.values()), 200
+        return list(sorted(flow_tools._registry.values(), key=lambda x: -x['weight'])), 200
 
 
 class API(api_tools.APIBase):

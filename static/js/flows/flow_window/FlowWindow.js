@@ -23,8 +23,20 @@ const FlowWindow = {
 
     },
     methods: {
-        handleRunFlow() {
-            showNotify('INFO', 'running flow ' + this.selectedFlow.display_name)
+        async handleRunFlow() {
+            const api_url = this.$root.build_api_url('flows', 'flow')
+            this.is_loading = true
+            const resp = await fetch(api_url + '/' + this.$root.project_id + '/' + this.selectedFlow.id, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({async: false})
+            })
+            this.is_loading = false
+            if (resp.ok) {
+                showNotify('SUCCESS', 'Flow finished')
+            } else {
+                showNotify('ERROR', 'Flow run error')
+            }
         },
         async handleSaveFlow() {
             const api_url = this.$root.build_api_url('flows', 'flow')
