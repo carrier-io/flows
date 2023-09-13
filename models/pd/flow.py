@@ -1,3 +1,5 @@
+import json
+
 from pydantic import BaseModel, ValidationError, root_validator, validator
 from typing import List, Optional
 
@@ -34,6 +36,7 @@ class Variable(BaseModel):
             'float': cls.validate_float,
             'integer': cls.validate_integer,
             'boolean': cls.validate_bool,
+            'json': cls.validate_json,
         }
         v_type = values['type']
         
@@ -66,6 +69,10 @@ class Variable(BaseModel):
             return value.lower() == 'true'
         else:
             raise ValueError(f"Invalid boolean value: {value}")
+
+    @classmethod
+    def validate_json(cls, value: str):
+        return json.loads(value)
         
 
 class StartPayload(BaseModel):

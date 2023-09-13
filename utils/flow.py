@@ -263,6 +263,7 @@ class FlowExecutor:
                 thread.join()
 
             log.info(f"Step {step} finished")
+        log.info(f"Flow execution DONE: {self.run_id}")
 
         # remove all files
         # current_dir = os.getcwd()

@@ -101,7 +101,7 @@ def start_validate(**kwargs):
 def tst(arg1='DEFAULT', **kwargs):
     log.info(f'Executing tst with {arg1=}')
     log.info(f'Executing tst with {kwargs=}')
-    return 'THIS HAS RETURNED!'
+    return {'ok': True, 'result': 'THIS HAS RETURNED!'}
 
 
 @flow_tools.validator(flow_uid='test')

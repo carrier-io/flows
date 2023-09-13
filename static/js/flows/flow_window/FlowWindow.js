@@ -50,7 +50,8 @@ const FlowWindow = {
     <pre class="tmp-helper">FlowWindow.js</pre>
     <div class="d-flex card-header">
         <div class="flex-grow-1 font-h4 font-bold">
-            {{ selectedFlow?.display_name }}
+            {{ selectedFlow?.name }}
+            <p class="font-h6">id: {{ selectedFlow?.id }}</p>
         </div>
         <div>
             <button class="btn btn-secondary mr-2"

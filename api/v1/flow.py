@@ -37,9 +37,11 @@ class ProjectAPI(api_tools.APIModeHandler):
             flow_data = session.query(Flow).with_entities(Flow.flow_data).filter(Flow.id == flow_id).first()
             if not flow_data:
                 return {'error': 'Flow data not found'}, 404
+            flow_data = flow_data[0]
 
         run_async = request.json.get('async', False)
 
+        log.info('api got flow_data %s', flow_data)
         try:
             parser = FlowParser(flow_data)
             backend_config = parser.parse()
