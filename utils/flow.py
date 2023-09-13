@@ -26,10 +26,10 @@ class FlowValidator:
 
     def _run_validation(self, task_id, task_config):
         rpc_name = f"{task_config['rpc_name']}__validate"
-        
+
         # loading rpc function object
         rpc_obj = getattr(self.context.rpc_manager.call, rpc_name)
-        
+
         # calling rpc
         try:
             result = rpc_obj(**task_config['params'])
@@ -37,12 +37,12 @@ class FlowValidator:
                 return
         except Exception as e:
             errors = f"Error happened during validation:\n {e}"
-        
+
         try:
             errors = result.get('errors') if "errors" in result else result['error']
         except KeyError as e:
             errors = str(e)
-        
+
         with self._lock:
             self.errors[task_id] = errors
 
@@ -50,23 +50,23 @@ class FlowValidator:
         if not self.variables:
             return
         response = self.module.start_flow(self.project_id, self.variables)
-        if not response["ok"]: 
+        if not response["ok"]:
             del response['ok']
             self.errors['variables'] = response
         else:
             self.variables = response['result']
-            
+
     def validate(self):
         # validating global variables first
         self._validate_variables()
-        
+
         # Validating RPC functions
         threads = []
         for task_id, task_config in self.tasks.items():
             th = Thread(target=self._run_validation, args=(task_id, task_config))
             th.start()
             threads.append(th)
-    
+
         for thread in threads:
             thread.join()
 
@@ -91,20 +91,20 @@ class Flow:
         for parent in parents:
             parent_path = os.path.join(folder_path, f"{parent}_out.json")
             skip = self.tasks.get(parent, {}).get('on_failure') == self.SKIP_CHAR
-            
+
             if not os.path.exists(parent_path):
                 if skip:
                     continue
                 raise PreviousTaskFailed("Previous task failed")
-            
+
             file = open(parent_path, 'r')
             content = json.load(file)
-            
+
             if not content.get("ok"):
                 if skip:
                     continue
                 raise PreviousTaskFailed("Previous task failed")
-            
+
             name = self.tasks[parent]['name']
             prev_values[name] = content["result"]
             file.close()
@@ -184,7 +184,7 @@ class Flow:
             except KeyError as e:
                 error_msg = f"Failed to infer {param_name} for {original_value} in {task_id} task"
                 log.error(error_msg)
-                self.context.event_manager.fire_event("task_executed", json.dumps({
+                self.context.event_manager.fire_event("flows_node_finished", json.dumps({
                     "ok": False,
                     "error": error_msg,
                     "task_id": task_id,
@@ -203,7 +203,7 @@ class Flow:
         result["task_id"] = task_id
         result["run_id"] = self.run_id
         if (meta.get('log_results') and result['ok']) or not result['ok']:
-            self.context.event_manager.fire_event("task_executed", result)
+            self.context.event_manager.fire_event("flows_node_finished", result)
         
         log.info(f"Completed: {task_id}")
         
@@ -214,7 +214,7 @@ class Flow:
         with open(myfile, "w+") as out_file:
             json.dump(result, out_file, indent=4)
 
-    def run_workflow(self):
+    def run(self):
         #### MAIN
         log.info("FLOW STARTED...")
         self.context.sio.emit("flow_started", {"msg": "Workflow is started", "run_id": self.run_id})

@@ -8,19 +8,23 @@ const FlowWindow = {
         }
     },
     async mounted() {
-        const api_url = '/flows/static/mock_data/flow_blocks.json'
-        this.is_loading = true
-        const resp = await fetch(api_url)
-        this.is_loading = false
-        if (resp.ok) {
-            this.flow_blocks = await resp.json()
-        } else {
-            showNotify('ERROR', 'Unable to fetch flow items')
-        }
+        $(document).on('vue_init', async () => {
+            // const api_url = '/flows/static/mock_data/flow_blocks.json'
+            const api_url = this.$root.build_api_url('flows', 'nodes') + '/' + this.$root.project_id
+            this.is_loading = true
+            const resp = await fetch(api_url)
+            this.is_loading = false
+            if (resp.ok) {
+                this.flow_blocks = await resp.json()
+            } else {
+                showNotify('ERROR', 'Unable to fetch flow items')
+            }
+        })
+
     },
     methods: {
         handleRunFlow() {
-            showNotify('INFO', 'running flow ' + this.selectedFlow.name)
+            showNotify('INFO', 'running flow ' + this.selectedFlow.display_name)
         },
         async handleSaveFlow() {
             const api_url = this.$root.build_api_url('flows', 'flow')
@@ -46,7 +50,7 @@ const FlowWindow = {
     <pre class="tmp-helper">FlowWindow.js</pre>
     <div class="d-flex card-header">
         <div class="flex-grow-1 font-h4 font-bold">
-            {{ selectedFlow?.name }}
+            {{ selectedFlow?.display_name }}
         </div>
         <div>
             <button class="btn btn-secondary mr-2"

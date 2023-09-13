@@ -1,5 +1,5 @@
 from pylon.core.tools import web, log  # pylint: disable=E0611,E0401
-from tools import rpc_tools, tasklib  # pylint: disable=E0401
+from tools import rpc_tools, flow_tools
 import requests
 from ..utils.evaluate import get_evaluater, EvaluateTemplate
 from time import sleep
@@ -57,8 +57,8 @@ def handle_exceptions(fn):
 
 
 class RPC:
-    @web.rpc("flowy_make_request", "make_request")
-    @rpc_tools.wrap_exceptions(RuntimeError)
+    # @web.rpc("flowy_make_request", "make_request")
+    # @rpc_tools.wrap_exceptions(RuntimeError)
     def _make_request(self, method: str, jwt_token: str, url: str):
         headers = {}
         if jwt_token:
@@ -71,14 +71,21 @@ class RPC:
         return {"ok": True, 'result': response.json()}
 
 
-    @web.rpc("flowy_evaluate", "evaluate")
-    @rpc_tools.wrap_exceptions(RuntimeError)
-    @tasklib.task("flowy_evaluate", {
-        "uid": "evaluate",
-        "icon_url": "/flows/static/icons/evaluate.svg",
-        "tooltip": "evaluate.svg",
-    })
-    def _make_evaluate(self, project_id: int, query: str, payload: dict, output_format: str = 'string'):
+    # @web.rpc("flowy_evaluate", "evaluate")
+    # @rpc_tools.wrap_exceptions(RuntimeError)
+    # @tasklib.task("flowy_evaluate", {
+    #     "uid": "evaluate",
+    #     "icon_url": "/flows/static/icons/evaluate.svg",
+    #     "tooltip": "evaluate.svg",
+    # })
+    @flow_tools.register(
+        uid='evaluate',
+        display_name='Evaluate',
+        tooltip='Evaluate',
+        icon_url='/flows/static/icons/evaluate.svg',
+        # validation_rpc='embeddings_calculate_similarities_flow_validate'
+    )
+    def evaluate(self, project_id: int, query: str, payload: dict, output_format: str = 'string'):
         try:
             evaluate_class = get_evaluater(output_format)
             evaluater: EvaluateTemplate = evaluate_class(self, query, payload, output_format)
@@ -94,14 +101,22 @@ class RPC:
     def _validate_evaluate(self, **kwargs):
         return EvaluatePayload.validate(kwargs)
 
-    @web.rpc("flowy_pause", "pause")
-    @rpc_tools.wrap_exceptions(RuntimeError)
-    @tasklib.task("flowy_pause", {
-        "uid": "stop",
-        "tooltip": "stop.svg",
-        "icon_url": "/flows/static/icons/stop.svg",
-    })
-    def _make_pause(self, project_id: int, time: int):
+    # @web.rpc("flowy_pause", "pause")
+    # @rpc_tools.wrap_exceptions(RuntimeError)
+    # @tasklib.task("flowy_pause", {
+    #     "uid": "stop",
+    #     "tooltip": "stop.svg",
+    #     "icon_url": "/flows/static/icons/stop.svg",
+    # })
+
+    @flow_tools.register(
+        uid='pause',
+        display_name='Pause',
+        tooltip='Wait',
+        icon_url='/flows/static/icons/pause.svg',
+        # validation_rpc='embeddings_calculate_similarities_flow_validate'
+    )
+    def pause(self, project_id: int, time: int):
         try:
             time = float(time)
             sleep(time)
@@ -117,14 +132,22 @@ class RPC:
         return PausePayload.validate(kwargs)
 
 
-    @web.rpc("flowy_start_flow", "start_flow")
-    @rpc_tools.wrap_exceptions(RuntimeError)
-    @tasklib.task("flowy_start_flow", {
-        "uid": "start",
-        "tooltip":"start block",
-        "icon_url":"fa fa-terminal fa-xl"
-    })
-    def _start_flow(self, project_id: int, variables: list):
+    # @web.rpc("flowy_start_flow", "start_flow")
+    # @rpc_tools.wrap_exceptions(RuntimeError)
+    # @tasklib.task("flowy_start_flow", {
+    #     "uid": "start",
+    #     "tooltip":"start block",
+    #     "icon_url":"fa fa-terminal fa-xl"
+    # })
+    @flow_tools.register(
+        uid='start',
+        display_name='Start',
+        tooltip='Start node',
+        icon_fa='fa fa-terminal fa-xl',
+        inputs=0,
+        # validation_rpc='embeddings_calculate_similarities_flow_validate'
+    )
+    def start(self, project_id: int, variables: list):
         variable_dict = {}
         for variable in variables:
             try:

@@ -1,5 +1,5 @@
 const FlowNode = {
-    props: ['idx', 'uid', 'tooltip', 'icon_url', 'icon_fa', 'name'],
+    props: ['idx', 'uid', 'tooltip', 'icon_url', 'icon_fa', 'display_name'],
     methods: {
         handleDrag(e) {
             console.log('dragging', e)
@@ -15,9 +15,9 @@ const FlowNode = {
         draggable="true"
         @dragstart="handleDrag"
     >
-        <img v-if="icon_url" :src="icon_url" :alt="name" draggable="false"/>
+        <img v-if="icon_url" :src="icon_url" :alt="display_name" draggable="false"/>
         <i v-else-if="icon_fa"  :class="icon_fa" draggable="false" style="color: var(--gray600);"></i>
-        <span v-else draggable="false">{{ name }}</span>
+        <span v-else draggable="false">{{ display_name }}</span>
     </div>
     `
 }

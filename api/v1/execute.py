@@ -35,11 +35,11 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
             backend_config = parser.parse()
         except InvalidTaskNames as e:
             return {
-                "ok": False, 
+                "ok": False,
                 "error": {
                     "msg": str(e),
                     "invalid_names": e.invalid_names,
-                }, 
+                },
                 "type": "parse_error"
             }
 
@@ -47,20 +47,16 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
         backend_config['project_id'] = project_id
         backend_config['run_id'] = str(uuid.uuid4())
         # backend_config['run_id'] = '24c96b03-eab5-43c8-9257-d8bbe76295b5'
-        
+
         validator = FlowValidator(self.module, backend_config)
         errors = validator.validate()
         if errors:
             response = {"ok": False, "errors": errors, "type": "validation_error"}
             return response, 400
-        
+
         backend_config['variables'] = validator.variables
         self.module.context.event_manager.fire_event('run_workflow', backend_config)
         return {"ok": True, "result": backend_config}, 200
-
-
-class AdminAPI(api_tools.APIModeHandler):
-    ...
 
 
 class API(api_tools.APIBase):
@@ -71,5 +67,4 @@ class API(api_tools.APIBase):
 
     mode_handlers = {
         'default': ProjectAPI,
-        'administration': AdminAPI,
     }

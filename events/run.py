@@ -3,11 +3,11 @@ from pylon.core.tools import log, web
 
 
 class Event:
-    @web.event("task_executed")
-    def _task_executed(self, context, event, payload):
-        context.sio.emit("task_executed", payload)
+    @web.event("flows_node_finished")
+    def node_finished(self, context, event, payload):
+        context.sio.emit("flows_node_finished", payload)
 
-    @web.event("run_workflow")
-    def _run_workflow(self, context, event, data):
+    @web.event("flows_run_flow")
+    def run_flow(self, context, event, data):
         flow = Flow(self, data)
-        flow.run_workflow()
+        flow.run()

@@ -11,9 +11,9 @@ from typing import Dict, List
 
 
 class RPC:
-    @web.rpc("flowy_run_workflow", "run_workflow")
+    @web.rpc("flows_run_flow")
     @rpc_tools.wrap_exceptions(RuntimeError)
-    def _run_workflow(self, data:Dict):
+    def run_flow(self, data: dict):
         def _execute_task(self, task_id, meta):
             log.info(f'Process started: {os.getpid()} -> {task_id}')
             output_path = f"{task_id}_out.json"
@@ -45,7 +45,7 @@ class RPC:
                     # 
                     if not value:
                         log.error(f"Failed to infer {name} for {task_id}")
-                        self.context.event_manager.fire_event("task_executed", json.dumps({
+                        self.context.event_manager.fire_event("flows_node_finished", json.dumps({
                             "ok": False,
                             "error": f"Failed to infer {name} for {task_id}",
                             "task_id": task_id,
@@ -72,7 +72,7 @@ class RPC:
             # Sending info regarding task completion
             result["rpc_name"] = meta["rpc_name"]
             result["task_id"] = task_id
-            self.context.event_manager.fire_event("task_executed", json.dumps(result))
+            self.context.event_manager.fire_event("flows_node_finished", json.dumps(result))
             
             log.info(f"Completed: {task_id}")
             
