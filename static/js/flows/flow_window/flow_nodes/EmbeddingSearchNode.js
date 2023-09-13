@@ -5,7 +5,7 @@ const EmbeddingSearchNode = {
     },
     data() {
         return {
-            embedding: null,
+            embedding_id: null,
             flow_handle_settings: {
                 on_success: '',
                 on_failure: 0,
@@ -41,7 +41,7 @@ const EmbeddingSearchNode = {
             return V.custom_data.embeddings
         },
         selectedEmbedding() {
-            return this.embeddings.find(i => i.id === this.embedding)
+            return this.embeddings.find(i => i.id === this.embedding_id)
         }
     },
     methods: {
@@ -130,7 +130,7 @@ const EmbeddingSearchNode = {
         <div class="d-flex flex-column" style="border-top: 1px solid var(--gray200)">
             <div class="d-flex flex-column p-3">
                 <select class="selectpicker" data-style="select-secondary" 
-                    v-model="embedding"
+                    v-model="embedding_id"
                 >
                     <option v-for="i in embeddings" :value="i.id" :key="i.id">
                         {{ i.library_name }}
