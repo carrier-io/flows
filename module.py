@@ -16,8 +16,7 @@
 #   limitations under the License.
 
 """ Module """
-from pylon.core.tools import log  # pylint: disable=E0611,E0401
-from pylon.core.tools import module  # pylint: disable=E0611,E0401
+from pylon.core.tools import module, log
 
 from tools import theme
 
@@ -54,7 +53,12 @@ class Module(module.ModuleModel):
             }
         )
 
+        self.init_flows()
+
 
     def deinit(self):  # pylint: disable=R0201
         """ De-init module """
         log.info('De-initializing')
+
+    def init_flows(self) -> None:
+        from .flows import start, start_validate, pause, pause_validate, evaluate, evaluate_validate

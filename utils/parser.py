@@ -7,7 +7,6 @@ class InvalidTaskNames(Exception):
         self.invalid_names = invalid_names
 
 
-
 class FlowParser:
     def __init__(self, front_config):
         self.front_config: dict = front_config
@@ -15,14 +14,13 @@ class FlowParser:
         self.back_config = {'tasks': self.back_tasks}
         self.front_tasks: dict = front_config['drawflow']['Home']['data']
 
-
     def _find_parents(self, task_id):
         full_parents = []
         task_data = self.front_tasks.get(task_id)
-        
+
         if not task_data:
             return list(set(full_parents))
-        
+
         # Get the connections for the current task
         connections = task_data.get("inputs", {}).get("input_1", {}).get("connections", [])
 
@@ -39,22 +37,20 @@ class FlowParser:
 
         return list(set(full_parents))
 
-
     def _find_parent_lists(self):
         for task_id in self.front_tasks:
-            parents  = self._find_parents(task_id)
+            parents = self._find_parents(task_id)
             data = self.back_tasks.setdefault(task_id, {})
-            data['step'] =  len(parents) + 1
+            data['step'] = len(parents) + 1
             data['parent_list'] = parents
-    
 
     def _populate_task_props(self):
         for task_id, data in self.back_tasks.items():
             front_data = self.front_tasks[task_id]['data']
             data['params'] = {
-                param: value 
+                param: value
                 for param, value in front_data.items()
-                if not param == "flow_handle_settings" 
+                if not param == "flow_handle_settings"
             }
             front_settings = front_data.get('flow_handle_settings')
             if front_settings:
@@ -64,23 +60,23 @@ class FlowParser:
             else:
                 name = self.front_tasks[task_id]['name']
                 data['name'] = "flowy_start" if name == "start" else ""
-                
 
     def _map_rpc_functions(self):
-        mapping = tasklib.get_tasks_to_rpc_mappings()
+        # mapping = tasklib.get_tasks_to_rpc_mappings()
+        from tools import flow_tools
+        mapping = flow_tools._registry
         invalid_names = []
         for task_id, data in self.front_tasks.items():
             name = data['name']
-            rpc_name = mapping.get(name)
-            if not rpc_name:
+            flow_meta = mapping.get(name)
+            if not flow_meta:
                 invalid_names.append(name)
-            
-            self.back_tasks[task_id] = {}
-            self.back_tasks[task_id]['rpc_name'] = rpc_name
+            else:
+                self.back_tasks[task_id] = {'flow_meta': flow_meta}
+                # self.back_tasks[task_id]['rpc_name'] = flow_tools.get_rpc_name(flow_meta['uid'])
 
         if invalid_names:
             raise InvalidTaskNames("Invalid task names found", invalid_names)
-    
 
     def parse(self):
         self._map_rpc_functions()

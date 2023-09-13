@@ -1,4 +1,4 @@
-from ..utils.flow import Flow
+from ..utils.flow import FlowExecutor
 from pylon.core.tools import log, web
 
 
@@ -9,5 +9,5 @@ class Event:
 
     @web.event("flows_run_flow")
     def run_flow(self, context, event, data):
-        flow = Flow(self, data)
+        flow = FlowExecutor(self, data)
         flow.run()

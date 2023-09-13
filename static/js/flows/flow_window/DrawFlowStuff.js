@@ -74,7 +74,12 @@ const DrawFlowStuff = {
             // }
             const {flow_data} = await this.fetchFlowDetails(id)
 
-            flow_data && this.editor.import(flow_data)
+            try {
+                flow_data && this.editor.import(flow_data)
+            } catch (e) {
+                console.error(e)
+                showNotify('WARNING', 'Some nodes cannot be loaded')
+            }
 
         },
         is_loading(newValue) {

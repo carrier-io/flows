@@ -82,7 +82,7 @@ const EmbeddingDeduplicateNode = {
         <div class="d-flex p-3">
             <div class="flex-grow-1">
                 <span class="font-h6 text-capitalize">
-                    {{ node_meta.name }}
+                    {{ node_meta.display_name }}
                 </span>
             </div>
             <div>
@@ -120,7 +120,7 @@ const EmbeddingDeduplicateNode = {
                     <div class="flex-grow-1">
                         <p class="font-h5 font-weight-bold text-capitalize">Properties</p>
                         <span class="font-h6 font-weight-bold text-capitalize">
-                            {{ node_meta.name }}
+                            {{ node_meta.display_name }}
                         </span>
                     </div>
                     <div>

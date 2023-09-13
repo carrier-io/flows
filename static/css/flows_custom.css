@@ -95,6 +95,7 @@
     height: 100%;
     border-radius: 0;
     cursor: default;
+    z-index: 100;
 }
 
 #CreateFlowModal {
