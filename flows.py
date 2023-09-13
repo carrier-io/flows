@@ -98,8 +98,10 @@ def start_validate(**kwargs):
     icon_fa='fa fa-times fa-xl',
     inputs=1,
 )
-def tst(arg1='DEFAULT'):
+def tst(arg1='DEFAULT', **kwargs):
     log.info(f'Executing tst with {arg1=}')
+    log.info(f'Executing tst with {kwargs=}')
+    return 'THIS HAS RETURNED!'
 
 
 @flow_tools.validator(flow_uid='test')
