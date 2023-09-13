@@ -1,0 +1,251 @@
+{
+    "drawflow": {
+        "Home": {
+            "data": {
+                "1": {
+                    "id": 1,
+                    "name": "similarity",
+                    "data": {
+                        "flow_handle_settings": {
+                            "on_success": "step1",
+                            "on_failure": 0,
+                            "log_results": false
+                        },
+                        "columns": [],
+                        "cutoff": "{{nodes['flowy_start'].cutoff}}",
+                        "library_name": "steps",
+                        "steps": [
+                            "Login user",
+                            "Creates application test",
+                            "Launches application test",
+                            "Delete that application test",
+                            "Enters test result page"
+                        ],
+                        "top_k": 5
+                    },
+                    "class": "flow_node",
+                    "html": "search",
+                    "typenode": "vue",
+                    "inputs": {
+                        "input_1": {
+                            "connections": [
+                                {
+                                    "node": "2",
+                                    "input": "output_1"
+                                }
+                            ]
+                        }
+                    },
+                    "outputs": {
+                        "output_1": {
+                            "connections": [
+                                {
+                                    "node": "4",
+                                    "output": "input_1"
+                                }
+                            ]
+                        }
+                    },
+                    "pos_x": 113,
+                    "pos_y": 107
+                },
+                "2": {
+                    "id": 2,
+                    "name": "start",
+                    "data": {
+                        "variables": [
+                            {
+                                "name": "cutoff",
+                                "type": "float",
+                                "value": "0.4"
+                            }
+                        ]
+                    },
+                    "class": "flow_node",
+                    "html": "start",
+                    "typenode": "vue",
+                    "inputs": {},
+                    "outputs": {
+                        "output_1": {
+                            "connections": [
+                                {
+                                    "node": "1",
+                                    "output": "input_1"
+                                }
+                            ]
+                        }
+                    },
+                    "pos_x": 113,
+                    "pos_y": 15
+                },
+                "4": {
+                    "id": 4,
+                    "name": "prompt",
+                    "data": {
+                        "flow_handle_settings": {
+                            "on_success": "",
+                            "on_failure": 0,
+                            "log_results": false
+                        },
+                        "payload": {
+                            "input": "What is the capital of Uzbekistan",
+                            "context": "Capitals of countries",
+                            "integration_id": 1,
+                            "project_id": 1,
+                            "prompt_id": 1,
+                            "integration_settings": {
+                                "model_name": "text-bison@001",
+                                "temperature": 1,
+                                "max_decode_steps": 256,
+                                "top_p": 0.8,
+                                "top_k": 40
+                            }
+                        }
+                    },
+                    "class": "flow_node",
+                    "html": "search",
+                    "typenode": "vue",
+                    "inputs": {
+                        "input_1": {
+                            "connections": [
+                                {
+                                    "node": "1",
+                                    "input": "output_1"
+                                }
+                            ]
+                        }
+                    },
+                    "outputs": {
+                        "output_1": {
+                            "connections": []
+                        }
+                    },
+                    "pos_x": 404,
+                    "pos_y": 255
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+{
+    "drawflow": {
+        "Home": {
+            "data": {
+                "1": {
+                    "id": 1,
+                    "name": "similarity",
+                    "data": {
+                        "flow_handle_settings": {
+                            "on_success": "step1",
+                            "on_failure": 0,
+                            "log_results": false
+                        },
+                        "columns": [],
+                        "cutoff": "{{nodes['flowy_start'].cutoff}}",
+                        "library_name": "steps",
+                        "steps": [
+                            "Login user",
+                            "Creates application test",
+                            "Launches application test",
+                            "Delete that application test",
+                            "Enters test result page"
+                        ],
+                        "top_k": 5
+                    },
+                    "class": "flow_node",
+                    "html": "search",
+                    "typenode": "vue",
+                    "inputs": {
+                        "input_1": {
+                            "connections": [
+                                {
+                                    "node": "2",
+                                    "input": "output_1"
+                                }
+                            ]
+                        }
+                    },
+                    "outputs": {
+                        "output_1": {
+                            "connections": [
+                                {
+                                    "node": "4",
+                                    "output": "input_1"
+                                }
+                            ]
+                        }
+                    },
+                    "pos_x": 113,
+                    "pos_y": 107
+                },
+                "2": {
+                    "id": 2,
+                    "name": "start",
+                    "data": {
+                        "variables": [
+                            {
+                                "name": "cutoff",
+                                "type": "float",
+                                "value": "0.4"
+                            }
+                        ]
+                    },
+                    "class": "flow_node",
+                    "html": "start",
+                    "typenode": "vue",
+                    "inputs": {},
+                    "outputs": {
+                        "output_1": {
+                            "connections": [
+                                {
+                                    "node": "1",
+                                    "output": "input_1"
+                                }
+                            ]
+                        }
+                    },
+                    "pos_x": 113,
+                    "pos_y": 15
+                },
+                "4": {
+                    "id": 4,
+                    "name": "evaluate",
+                    "data": {
+                        "flow_handle_settings": {
+                            "on_success": "",
+                            "on_failure": "stop",
+                            "log_results": true
+                        },
+                        "query": "{% for item in payload %}{% for output_item in item.output %}{% if 'similar' in output_item %}{{ output_item.similar }}\n{% endif %}{% endfor %}{% endfor %}",
+                        "payload": "{{nodes['step1'].similarities}}"
+                    },
+                    "class": "flow_node",
+                    "html": "search",
+                    "typenode": "vue",
+                    "inputs": {
+                        "input_1": {
+                            "connections": [
+                                {
+                                    "node": "1",
+                                    "input": "output_1"
+                                }
+                            ]
+                        }
+                    },
+                    "outputs": {
+                        "output_1": {
+                            "connections": []
+                        }
+                    },
+                    "pos_x": 404,
+                    "pos_y": 255
+                }
+            }
+        }
+    }
+}

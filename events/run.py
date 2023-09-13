@@ -10,5 +10,4 @@ class Event:
     @web.event("run_workflow")
     def _run_workflow(self, context, event, data):
         flow = Flow(self, data)
-        flow.validate_flow()
         flow.run_workflow()

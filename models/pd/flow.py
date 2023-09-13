@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ValidationError, root_validator, validator
-from typing import List
+from typing import List, Optional
 
 
 class WorkflowModel(BaseModel):
@@ -10,6 +10,16 @@ class WorkflowModel(BaseModel):
 
 class WorkflowUpdateModel(WorkflowModel):
     id: int
+
+
+class EvaluatePayload(BaseModel):
+    query: str 
+    payload: dict 
+    output_format: Optional[str] = "string"
+
+
+class PausePayload(BaseModel):
+    time: float
 
 
 class Variable(BaseModel):
@@ -56,3 +66,7 @@ class Variable(BaseModel):
             return value.lower() == 'true'
         else:
             raise ValueError(f"Invalid boolean value: {value}")
+        
+
+class StartPayload(BaseModel):
+    variables: List[Variable]

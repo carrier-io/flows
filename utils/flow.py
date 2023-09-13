@@ -1,19 +1,81 @@
 import re
 import os
-import re
 import json
 from pathlib import Path
-from threading import Thread
+from threading import Thread, Lock
 
 from typing import Dict, List
-from pylon.core.tools import log, web
+from pylon.core.tools import log
 
 
 class PreviousTaskFailed(Exception):
     "Raised when previous task is faield"
 
 
+
+class FlowValidator:
+    def __init__(self, module, data):
+        self.module = module
+        self.context = module.context
+        self.data = data
+        self.project_id = self.data.get('project_id', None)
+        self.variables = self.data.get('variables', {})
+        self.tasks = self.data.get('tasks', {})
+        self.errors = {}
+        self._lock = Lock()
+
+    def _run_validation(self, task_id, task_config):
+        rpc_name = f"{task_config['rpc_name']}__validate"
+        
+        # loading rpc function object
+        rpc_obj = getattr(self.context.rpc_manager.call, rpc_name)
+        
+        # calling rpc
+        try:
+            result = rpc_obj(**task_config['params'])
+            if result['ok']:
+                return
+        except Exception as e:
+            errors = f"Error happened during validation:\n {e}"
+        
+        try:
+            errors = result.get('errors') if "errors" in result else result['error']
+        except KeyError as e:
+            errors = str(e)
+        
+        with self._lock:
+            self.errors[task_id] = errors
+
+    def _validate_variables(self):
+        if not self.variables:
+            return
+        response = self.module.start_flow(self.project_id, self.variables)
+        if not response["ok"]: 
+            del response['ok']
+            self.errors['variables'] = response
+        else:
+            self.variables = response['result']
+            
+    def validate(self):
+        # validating global variables first
+        self._validate_variables()
+        
+        # Validating RPC functions
+        threads = []
+        for task_id, task_config in self.tasks.items():
+            th = Thread(target=self._run_validation, args=(task_id, task_config))
+            th.start()
+            threads.append(th)
+    
+        for thread in threads:
+            thread.join()
+
+        return self.errors
+
+
 class Flow:
+    SKIP_CHAR = "skip"
+
     def __init__(self, module, data):
         self.module = module
         self.context = module.context
@@ -23,17 +85,28 @@ class Flow:
         self.tasks = self.data.get('tasks', {})
         self.run_id = self.data['run_id']
 
-    def _read_outputs(self, parents, direct_parent):
+    def _read_outputs(self, parents):
         prev_values = {}
         folder_path = os.path.join(os.getcwd(), self.run_id)
         for parent in parents:
             parent_path = os.path.join(folder_path, f"{parent}_out.json")
+            skip = self.tasks.get(parent, {}).get('on_failure') == self.SKIP_CHAR
+            
+            if not os.path.exists(parent_path):
+                if skip:
+                    continue
+                raise PreviousTaskFailed("Previous task failed")
+            
             file = open(parent_path, 'r')
             content = json.load(file)
-            if direct_parent == parent and not content.get("ok"):
+            
+            if not content.get("ok"):
+                if skip:
+                    continue
                 raise PreviousTaskFailed("Previous task failed")
+            
             name = self.tasks[parent]['name']
-            prev_values[name] = content["result"] if content['ok'] else {}
+            prev_values[name] = content["result"]
             file.close()
         return prev_values
 
@@ -41,7 +114,7 @@ class Flow:
     def resolve_fields(payload, prev_context, var_context):
         variable_pattern = r"([a-zA-Z0-9_]+)"
         variables_pattern = r"{{variables\." + variable_pattern + r"}}"
-        prev_pattern = r"{{nodes\['"+ variable_pattern + r"'\]\.?" + variable_pattern + r"}}"
+        prev_pattern = r"{{nodes\['"+ variable_pattern + r"'\]\.?" + variable_pattern + r"?}}"
         
         if isinstance(payload, dict):
             resolved_payload = {}
@@ -69,7 +142,7 @@ class Flow:
                 context = prev_context[task_name]
                 value = context if not attribute_name else context[attribute_name]
                 return value
-        
+
         return payload
 
     def generate_steps_conf(self, data:Dict):
@@ -97,18 +170,18 @@ class Flow:
         
         # loading previous tasks outputs
         try:
-            prev_values = self._read_outputs(meta['parent_list'], meta['parent'])
+            prev_values = self._read_outputs(meta['parent_list'])
         except PreviousTaskFailed as e:
-            log.error(f"Process terminated: {os.getpid} -> {task_id}\nReason: {str(e)}")
+            log.error(f"Process terminated: {os.getpid()} -> {task_id}\nReason: {str(e)}")
             return
 
         # filling params from inputed data
         for param_name, original_value in meta['params'].items():
             # check for inferring input
             try:
-                value = Flow.resolve_fields(original_value, prev_values, meta['variables'])
+                value = Flow.resolve_fields(original_value, prev_values, self.variables)
                 params[param_name] = value
-            except KeyError:
+            except KeyError as e:
                 error_msg = f"Failed to infer {param_name} for {original_value} in {task_id} task"
                 log.error(error_msg)
                 self.context.event_manager.fire_event("task_executed", json.dumps({
@@ -129,7 +202,8 @@ class Flow:
         result["rpc_name"] = meta["rpc_name"]
         result["task_id"] = task_id
         result["run_id"] = self.run_id
-        self.context.event_manager.fire_event("task_executed", result)
+        if (meta.get('log_results') and result['ok']) or not result['ok']:
+            self.context.event_manager.fire_event("task_executed", result)
         
         log.info(f"Completed: {task_id}")
         
@@ -142,8 +216,9 @@ class Flow:
 
     def run_workflow(self):
         #### MAIN
+        log.info("FLOW STARTED...")
         self.context.sio.emit("flow_started", {"msg": "Workflow is started", "run_id": self.run_id})
-        output = self.data.pop('output')
+        output = self.data.pop('output', None)
 
         # creating folder for this flow run
         folder_path = os.path.join(os.getcwd(), self.run_id)
@@ -152,16 +227,15 @@ class Flow:
         steps_data = self.generate_steps_conf(self.tasks)
         for step, task_ids in steps_data.items():
             log.info(f"Step {step} started")
-            processes = []
+            threads = []
             for task_id in task_ids:
                 task_config = self.tasks[task_id]
-                task_config['variables'] = self.variables
                 p = Thread(target=Flow._execute_task, args=(self, self.project_id, task_id, task_config))
                 p.start()
-                processes.append(p)
+                threads.append(p)
 
-            for process in processes:
-                process.join()
+            for thread in threads:
+                thread.join()
             
             log.info(f"Step {step} finished")
 
@@ -171,23 +245,3 @@ class Flow:
         log.info(os.listdir(current_dir))
         # for f in os.listdir(current_dir):
         #     os.remove(os.path.join(current_dir, f))
-
-
-    def validate_flow(self):
-        # validating global variables first
-        errors = {}
-        if self.variables:
-            response = self.module.start_flow(self.project_id, self.variables)
-            if not response['ok']:
-                del response['ok']
-                errors['variables'] = response
-            else:
-                self.variables = response['result']
-        
-        # Validating RPC functions
-        # steps_data = self.generate_steps_conf(self.tasks)
-        # for step, task_ids in steps_data.items():
-        #     pass
-        
-        if errors:
-            self.context.sio.emit("flow_errors", {"errors": errors, "run_id": self.run_id})

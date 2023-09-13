@@ -252,16 +252,17 @@
     },
     "output": null,
     "tasks": {
-        "embeddings_calculate_similarities1": {
-            "name": "step1",
-            "rpc_name": "embeddings_calculate_similarities",
+        "flowy_start_flow1": {
+            "name": "flowy_start",
+            "rpc_name": "flowy_start_flow",
             "params": {
-                "columns": null,
-                "cutoff": "0.4",
-                "library": "steps",
-                "steps": "Login user,\nCreates application test,\nLaunches application test,\nDelete that application test,\nEnters test result page",
-                "stringify": false,
-                "top_k": 5
+                "variables": [
+                    {
+                        "name": "time",
+                        "type": "float",
+                        "value": "0.9"
+                    },
+                ]
             },
             "step": 1,
             "parent": null,
@@ -271,7 +272,7 @@
             "name": "steps2",
             "rpc_name": "flowy_pause",
             "params": {
-                "time": "7.8"
+                "time": "{{nodes['flowy_start'].time}}"
             },
             "step": 2,
             "parent": "embeddings_calculate_similarities1",
@@ -279,19 +280,246 @@
                 "embeddings_calculate_similarities1"
             ]
         },
-        "flowy_evaluate3": {
-            "name": "step3",
-            "rpc_name": "flowy_evaluate",
+    }
+}
+
+"flowy_evaluate3": {
+    "name": "step3",
+    "rpc_name": "flowy_evaluate",
+    "params": {
+        "query": "{% set scores = [] %}{% for item in payload %}{% for output_item in item.output %}{% if 'score' in output_item %}{% if scores.append(output_item.score) %}{% endif %}{% endif %}{% endfor %}{% endfor %}{{ scores | sum / scores | count }}",
+        "payload": "{{nodes['step1'].similarities}}",
+        "output_format": "float"
+    },
+    "step": 3,
+    "parent": "flowy_pause2",
+    "parent_list": [
+        "embeddings_calculate_similarities1",
+        "flowy_pause2"
+    ]
+}
+//v4
+{
+    "variables": [
+        {
+            "name": "steps",
+            "type": "string",
+            "value": "Login user\nCreates application test\nLaunches application test\nDelete that application test\nEnters test result page"
+        }
+    ],
+    "output": null,
+    "tasks": {
+        "flowy_start_flow1": {
+            "name": "flowy_start",
+            "rpc_name": "flowy_start_flow",
             "params": {
-                "query": "{% set scores = [] %}{% for item in payload %}{% for output_item in item.output %}{% if 'score' in output_item %}{% if scores.append(output_item.score) %}{% endif %}{% endif %}{% endfor %}{% endfor %}{{ scores | sum / scores | count }}",
-                "payload": "{{nodes['step1'].similarities}}",
-                "output_format": "float"
+                "variables": [
+                    {
+                        "name": "time",
+                        "type": "float",
+                        "value": "0.9"
+                    }
+                ]
+            },
+            "step": 1,
+            "parent": null,
+            "parent_list": []
+        },
+        "flowy_pause2": {
+            "name": "steps2",
+            "rpc_name": "flowy_pause",
+            "params": {
+                "time": "{{nodes['flowy_start'].time}}"
+            },
+            "step": 2,
+            "parent": "flowy_start_flow1",
+            "parent_list": [
+                "flowy_start_flow1"
+            ]
+        },
+        "embeddings_calculate_similarities3": {
+            "name": "step3",
+            "rpc_name": "embeddings_calculate_similarities",
+            "params": {
+                "columns": [],
+                "cutoff": "0.4",
+                "library_name": "steps",
+                "steps": [
+                    "Login user",
+                    "Creates application test",
+                    "Launches application test",
+                    "Delete that application test",
+                    "Enters test result page"
+                ],
+                "top_k": 5
             },
             "step": 3,
             "parent": "flowy_pause2",
             "parent_list": [
-                "embeddings_calculate_similarities1",
-                "flowy_pause2"
+                "flowy_pause2",
+                "flowy_start_flow1"
+            ]
+        },
+        "flowy_evaluate4": {
+            "rpc_name": "flowy_evaluate",
+            "params": {
+                "query": "{% set scores = [] %}{% for item in payload %}{% for output_item in item.output %}{% if 'score' in output_item %}{% if scores.append(output_item.score) %}{% endif %}{% endif %}{% endfor %}{% endfor %}{{ scores | sum / scores | count }}",
+                "payload": "{{nodes['step3'].similarities}}",
+                "output_format": "float"
+            },
+            "step": 4,
+            "parent": "embeddings_calculate_similarities3",
+            "parent_list": [
+                "embeddings_calculate_similarities3",
+                "flowy_pause2",
+                "flowy_start_flow1"
+            ]
+        }
+    },
+    "project_id": 1,
+    "run_id": "24c96b03-eab5-43c8-9257-d8bbe76295b5"
+}
+
+
+
+
+
+        "flowy_evaluate3": {
+    "name": "step2",
+    "rpc_name": "flowy_evaluate",
+    "params": {
+        "query": "{% for item in payload %}{% for output_item in item.output %}{% if 'similar' in output_item %}{{ output_item.similar }}\n{% endif %}{% endfor %}{% endfor %}",
+        "payload": "{{nodes['step1'].similarities}}"
+    },
+    "step": 3,
+    "parent": "embeddings_calculate_similarities2",
+    "parent_list": [
+        "flowy_start_flow1",
+        "embeddings_calculate_similarities2"
+    ]
+},
+"prompts_predict4": {
+    "name": "step3",
+    "rpc_name": "prompts_predict",
+    "params": {
+        "payload": {
+            "input": "{{variables.steps}}",
+            "context": "As a testing engineer could you transform test cases to predefined library of steps.\nEvery step should start from new line. Put \"TO-BE-UPDATED\" instead of all generated xpath and css locators. Do not add type of locators\n\nLibrary of steps:\n{{ library }}\n\n \n\nOutput text need to follow gherkin syntax with keywords highlighted in bold",
+            "integration_id": 1,
+            "project_id": 1,
+            "prompt_id": 1,
+            "variables": {
+                "library": "{{nodes['step3']}}"
+            },
+            "integration_settings": {
+                "model_name": "text-bison@001",
+                "temperature": 1,
+                "max_decode_steps": 256,
+                "top_p": 0.8,
+                "top_k": 40
+            }
+        }
+    },
+    "step": 4,
+    "parent": "flowy_evaluate3",
+    "parent_list": [
+        "flowy_evaluate3",
+        "flowy_start_flow1",
+        "embeddings_calculate_similarities2"
+    ]
+}
+
+
+"{% for item in payload %}{% for output_item in item.output %}{% if 'similar' in output_item %}{{ output_item.similar }}\n{% endif %}{% endfor %}{% endfor %}"{
+    "variables": [
+        {
+            "name": "steps",
+            "type": "string",
+            "value": "Login user\nCreates application test\nLaunches application test\nDelete that application test\nEnters test result page"
+        }
+    ],
+    "output": null,
+    "tasks": {
+        "flowy_start_flow1": {
+            "name": "flowy_start",
+            "rpc_name": "flowy_start_flow",
+            "params": {
+                "variables": [
+                    {
+                        "name": "cutoff",
+                        "type": "float",
+                        "value": "0.4"
+                    }
+                ]
+            },
+            "step": 1,
+            "parent": null,
+            "parent_list": []
+        },
+        "embeddings_calculate_similarities2": {
+            "name": "step1",
+            "rpc_name": "embeddings_calculate_similarities",
+            "params": {
+                "columns": [],
+                "cutoff": "{{nodes['flowy_start'].cutoff}}",
+                "library_name": "steps",
+                "steps": [
+                    "Login user",
+                    "Creates application test",
+                    "Launches application test",
+                    "Delete that application test",
+                    "Enters test result page"
+                ],
+                "top_k": 5
+            },
+            "step": 2,
+            "parent": "flowy_start_flow1",
+            "parent_list": [
+                "flowy_start_flow1"
+            ]
+        },
+        "flowy_evaluate3": {
+            "name": "step2",
+            "rpc_name": "flowy_evaluate",
+            "params": {
+                "query": "{% for item in payload %}{% for output_item in item.output %}{% if 'similar' in output_item %}{{ output_item.similar }}\n{% endif %}{% endfor %}{% endfor %}",
+                "payload": "{{nodes['step1'].similarities}}"
+            },
+            "step": 3,
+            "parent": "embeddings_calculate_similarities2",
+            "parent_list": [
+                "flowy_start_flow1",
+                "embeddings_calculate_similarities2"
+            ]
+        },
+        "prompts_predict4": {
+            "name": "step3",
+            "rpc_name": "prompts_predict",
+            "params": {
+                "payload": {
+                    "input": "{{variables.steps}}",
+                    "context": "As a testing engineer could you transform test cases to predefined library of steps.\nEvery step should start from new line. Put \"TO-BE-UPDATED\" instead of all generated xpath and css locators. Do not add type of locators\n\nLibrary of steps:\n{{ library }}\n\n \n\nOutput text need to follow gherkin syntax with keywords highlighted in bold",
+                    "integration_id": 1,
+                    "project_id": 1,
+                    "prompt_id": 90,
+                    "variables": {
+                        "library": "{{nodes['step2']}}"
+                    },
+                    "integration_settings": {
+                        "model_name": "text-bison@001",
+                        "temperature": 1,
+                        "max_decode_steps": 256,
+                        "top_p": 0.8,
+                        "top_k": 40
+                    }
+                }
+            },
+            "step": 4,
+            "parent": "flowy_evaluate3",
+            "parent_list": [
+                "flowy_evaluate3",
+                "flowy_start_flow1",
+                "embeddings_calculate_similarities2"
             ]
         }
     }

@@ -54,9 +54,10 @@ class EvaluateTemplate(metaclass=MyABC):
     def evaluate(self):
         # extracting
         value: List[Dict] = self.extract()
-        self.context.sio.emit("evaluation_extracted_value", value)
+        self.context.sio.emit("evaluation_extracted", value)
         # transforming result
         result = self.handle_transform(value)
+        self.context.sio.emit("evaluation_transformed", result)
         return result
 
 
