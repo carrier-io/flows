@@ -96,8 +96,9 @@ class RPC:
         return {"ok": True, 'result': result}
 
 
-    @web.rpc("flowy_evaluate__validate", "evaluate__validate")
-    @handle_exceptions
+    # @web.rpc("flowy_evaluate__validate", "evaluate__validate")
+    # @handle_exceptions
+    @flow_tools.validator(for_uid='evaluate')
     def _validate_evaluate(self, **kwargs):
         return EvaluatePayload.validate(kwargs)
 
@@ -109,7 +110,7 @@ class RPC:
     #     "icon_url": "/flows/static/icons/stop.svg",
     # })
 
-    @flow_tools.register(
+    @flow_tools.flow(
         uid='pause',
         display_name='Pause',
         tooltip='Wait',
@@ -126,8 +127,9 @@ class RPC:
         return {"ok": True, 'result': {}}
     
 
-    @web.rpc("flowy_pause__validate", "pause__validate")
-    @handle_exceptions
+    # @web.rpc("flowy_pause__validate", "pause__validate")
+    # @handle_exceptions
+    @flow_tools.validator(for_uid='pause')
     def _validate_pause(self, **kwargs):
         return PausePayload.validate(kwargs)
 
@@ -139,7 +141,7 @@ class RPC:
     #     "tooltip":"start block",
     #     "icon_url":"fa fa-terminal fa-xl"
     # })
-    @flow_tools.register(
+    @flow_tools.flow(
         uid='start',
         display_name='Start',
         tooltip='Start node',
@@ -159,8 +161,10 @@ class RPC:
         return {"ok": True, 'result': variable_dict}
 
 
-    @web.rpc("flowy_start_flow__validate", "start_flow__validate")
-    @handle_exceptions
+    # @web.rpc("flowy_start_flow__validate", "start_flow__validate")
+    # @handle_exceptions
+
+    @flow_tools.validator(for_uid='start')
     def _validate_start_flow(self, **kwargs):
         return StartPayload.validate(kwargs)
 
