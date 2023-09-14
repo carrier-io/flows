@@ -30,7 +30,10 @@ const FlowWindow = {
             const resp = await fetch(api_url + '/' + this.$root.project_id + '/' + this.selectedFlow.id, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({async: false})
+                body: JSON.stringify({
+                    async: false,
+                    flow_data: this.$refs.DrawFlowStuff.editor.export()
+                })
             })
             this.is_loading = false
             if (resp.ok) {
@@ -90,7 +93,7 @@ const FlowWindow = {
             <button class="btn btn-basic"
                 @click="handleRunFlow"
                 :disabled="is_loading"
-            >Run</button>
+            >Save & Run</button>
         </div>
     </div>
     <div class="card-body px-0 pb-0">

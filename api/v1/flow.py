@@ -32,12 +32,18 @@ class ProjectAPI(api_tools.APIModeHandler):
             c.DEFAULT_MODE: {"admin": True, "editor": True, "viewer": False},
         }})
     def post(self, project_id: int, flow_id: int):
-        # Run flow
+        # Run flow and save if asked
+
+        flow_data = request.json.get('flow_data')
         with db.with_project_schema_session(project_id) as session:
-            flow_data = session.query(Flow).with_entities(Flow.flow_data).filter(Flow.id == flow_id).first()
-            if not flow_data:
-                return {'error': 'Flow data not found'}, 404
-            flow_data = flow_data[0]
+            if flow_data:
+                session.query(Flow).filter(Flow.id == flow_id).update({Flow.flow_data: request.json['flow_data']})
+                session.commit()
+            else:
+                flow_data = session.query(Flow).with_entities(Flow.flow_data).filter(Flow.id == flow_id).first()
+                if not flow_data:
+                    return {'error': 'Flow data not found'}, 404
+                flow_data = flow_data[0]
 
         run_async = request.json.get('async', False)
 
