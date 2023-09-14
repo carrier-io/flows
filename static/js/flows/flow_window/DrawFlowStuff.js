@@ -3,7 +3,8 @@ const nodeComponentMapping = {
     search: EmbeddingSearchNode,
     deduplicate: EmbeddingDeduplicateNode,
     evaluate: EvaluateNode,
-    prompt: PromptNode
+    prompt: PromptNode,
+    pause: PauseNodeComponent,
 }
 
 const getVueComponent = uid => {

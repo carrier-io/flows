@@ -70,7 +70,7 @@ class ProjectAPI(api_tools.APIModeHandler):
 
         result = None
         if run_async:
-            self.module.context.event_manager.fire_event('run_workflow', backend_config)
+            self.module.context.event_manager.fire_event('flows_run_flow', backend_config)
         else:
             log.info('FlowExecutor %s', backend_config)
             flow = FlowExecutor(self.module, backend_config)

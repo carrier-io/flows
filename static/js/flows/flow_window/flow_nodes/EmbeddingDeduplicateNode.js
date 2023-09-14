@@ -79,7 +79,7 @@ const EmbeddingDeduplicateNode = {
     },
     template: `
     <div class="d-flex flex-column">
-        <div class="d-flex p-3">
+        <div class="d-flex align-items-center p-3">
             <div class="flex-grow-1">
                 <span class="font-h6 text-capitalize">
                     {{ node_meta.display_name }}

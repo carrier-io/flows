@@ -80,14 +80,14 @@ def evaluate_validate(**kwargs):
     icon_url='/flows/static/icons/pause.svg',
     weight=89
 )
-def pause(project_id: int, time: int):
+def pause(project_id: int, wait_time_ms: int):
     try:
-        time = float(time)
-        sleep(time)
+        sleep_time = float(wait_time_ms) / 1000
+        sleep(sleep_time)
     except Exception as e:
         log.error(e)
         return {"ok": False, "error": str(e)}
-    return {"ok": True, 'result': {}}
+    return {"ok": True, 'result': {'slept_sec': sleep_time}}
 
 
 @flow_tools.validator(flow_uid='pause')

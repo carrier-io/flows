@@ -10,4 +10,4 @@ class Event:
     @web.event("flows_run_flow")
     def run_flow(self, context, event, data):
         flow = FlowExecutor(self, data)
-        flow.run()
+        result = flow.run()

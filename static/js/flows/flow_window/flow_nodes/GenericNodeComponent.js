@@ -35,16 +35,20 @@ const GenericNodeComponent = {
         },
     },
     template: `
-    <div class="d-flex p-3">
-        <div class="flex-grow-1">
-            <span class="font-h6 text-capitalize">{{ node_meta.display_name }}</span>
-        </div>
-        <div>
-            <button class="btn btn-action btn-icon__xs"
-                @click="handleNotify"
-            >
-                <i class="icon__18x18 icon-settings"></i>
-            </button>
+    <div class="d-flex flex-column">
+        <div class="d-flex align-items-center p-3">
+            <div class="flex-grow-1">
+                <span class="font-h6 text-capitalize">
+                    {{ node_meta.display_name }}
+                </span>
+            </div>
+            <div>
+                <button class="btn btn-action btn-icon__xs"
+                    @click="options.properties_open = !options.properties_open"
+                >
+                    <i class="icon__18x18 icon-settings"></i>
+                </button>
+            </div>
         </div>
         <div class="card flow_node_properties_container" 
             v-if="options.properties_open"

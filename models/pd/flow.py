@@ -21,7 +21,7 @@ class EvaluatePayload(BaseModel):
 
 
 class PausePayload(BaseModel):
-    time: float
+    wait_time_ms: int
 
 
 class Variable(BaseModel):

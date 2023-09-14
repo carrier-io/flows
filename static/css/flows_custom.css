@@ -104,14 +104,17 @@
 
 .loadingOverlay {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 84px);
     background-color: rgba(0, 0, 0, 0.28);
     position: absolute;
     z-index: 300;
     text-align: center;
+    border-radius: 0px 0px 4px 4px;
 }
 
 .loadingOverlay > span {
     position: absolute;
     top: 50%;
+    left: 50%;
+    transform: translateX(-50%);
 }

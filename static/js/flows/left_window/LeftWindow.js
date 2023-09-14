@@ -14,7 +14,7 @@ const LeftWindow = {
     <pre class="tmp-helper">LeftWindow.js</pre>
     <div class="card-header d-flex">
         <div class="flex-grow-1 font-h4 font-bold">
-            Embeddings
+            Flows
         </div>
         <div>
             <button class="btn btn-32 btn-secondary" 
