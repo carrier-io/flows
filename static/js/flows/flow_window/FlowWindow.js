@@ -24,6 +24,7 @@ const FlowWindow = {
     },
     methods: {
         async handleRunFlow() {
+            this.clearValidationErrors()
             const api_url = this.$root.build_api_url('flows', 'flow')
             this.is_loading = true
             const resp = await fetch(api_url + '/' + this.$root.project_id + '/' + this.selectedFlow.id, {
@@ -36,6 +37,7 @@ const FlowWindow = {
                 showNotify('SUCCESS', 'Flow finished')
             } else {
                 showNotify('ERROR', 'Flow run error')
+                this.handleValidationErrors(await resp.json())
             }
         },
         async handleSaveFlow() {
@@ -54,7 +56,22 @@ const FlowWindow = {
             } else {
                 showNotify('ERROR', 'Save error')
             }
-        }
+        },
+        handleValidationErrors(errors_json) {
+            console.log(errors_json)
+            const {errors} = errors_json
+            Object.entries(errors).forEach(([node_id, error_data]) => {
+                const vue_data = this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data[node_id].data
+                if (vue_data.options) { vue_data.options.validation_errors = error_data }
+            })
+        },
+        clearValidationErrors() {
+            Object.entries(
+                this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data
+            ).forEach(([node_id, {data}]) => {
+                if (data.options) { data.options.validation_errors = [] }
+            })
+        },
     },
     computed: {},
     template: `

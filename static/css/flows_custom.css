@@ -118,3 +118,9 @@
     left: 50%;
     transform: translateX(-50%);
 }
+
+.flow_validation_error {
+    background-color: #ff00002b;
+    border: 2px solid #ff00004d;
+    border-radius: 3px;
+}

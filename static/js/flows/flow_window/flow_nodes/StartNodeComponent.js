@@ -8,13 +8,35 @@ const StartNodeComponent = {
             variables: [],
             options: {
                 properties_open: false,
+                validation_errors: []
             }
         }
     },
     mounted() {
         load_node_data(this)
     },
-    computed: {},
+    computed: {
+        formatted_validation_errors() {
+            // {
+            //     "loc": [
+            //         "variables",
+            //         4,
+            //         "value"
+            //     ],
+            //     "msg": "Invalid integer value: sdfg",
+            //     "type": "value_error"
+            // }
+            return this.options.validation_errors.reduce((accum, i) => {
+                const [location, ...rest] = i.loc
+                accum[location] = {
+                    loc: rest,
+                    msg: i.msg,
+                    type: i.type
+                }
+                return accum
+            }, {})
+        }
+    },
     methods: {
         refresh_pickers() {
             this.$nextTick(() => $(this.$el).find('.selectpicker').selectpicker('refresh'))
@@ -33,7 +55,10 @@ const StartNodeComponent = {
         }
     },
     template: `
-    <div class="d-flex flex-column p-3">
+    <div class="d-flex flex-column p-3"
+        :class="{'flow_validation_error': options.validation_errors.length}"
+    >
+        
         <div class="d-flex">
             <div class="flex-grow-1">
                 <span class="font-h6 text-capitalize">
@@ -69,7 +94,10 @@ const StartNodeComponent = {
                 
             </div>
             <div class="card-body">
-                <VariablesInput v-model="variables"></VariablesInput>
+                <VariablesInput 
+                    v-model="variables" 
+                    :errors="formatted_validation_errors.variables"
+                ></VariablesInput>
             </div>
         </div>
     </div>
