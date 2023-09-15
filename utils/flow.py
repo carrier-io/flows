@@ -104,7 +104,6 @@ class FlowExecutor:
 
         # creating main output file
         self._main_file_path = self._folder_path.joinpath(self.MAIN_OUTPUT_FILE)
-        self._main_file_path.touch(exist_ok=True)
         self._write_to_file({}, self._main_file_path)
         
         self._file_lock = Lock()
@@ -149,7 +148,6 @@ class FlowExecutor:
         #
         with open(myfile, "w+") as out_file:
             json.dump(result, out_file, indent=4)
-            
 
     def _resolve_fields(self, original_value, values):
         placeholder_pattern = r"{{([a-zA-Z0-9_]+)}}"
@@ -189,11 +187,13 @@ class FlowExecutor:
             result[step] = [task_id]
         return dict(sorted(result.items()))
 
-    def get_flow_context(self, prev_values):
+    def get_flow_context(self, prev_values, task_config):
         return {
             'project_id': self.project_id, 
             'outputs': deepcopy(prev_values),
             'module': self.module,
+            'task_config': task_config,
+            'tasks': self.tasks
         }
 
     def _execute_task(self, project_id, task_id, meta):
@@ -207,7 +207,7 @@ class FlowExecutor:
         # loading rpc function object
         rpc_name = flow_tools.get_rpc_name(meta['flow_meta']['uid'])
         rpc_obj = getattr(self.context.rpc_manager.timeout(10), rpc_name)
-        params = {'flow_context': self.get_flow_context(prev_values)}
+        params = {'flow_context': self.get_flow_context(prev_values, meta)}
 
         # filling params from inputed data
         for param_name, original_value in meta['params'].items():
@@ -284,5 +284,6 @@ class FlowExecutor:
         # log.info(os.listdir(current_dir))
         # for f in os.listdir(current_dir):
         #     os.remove(os.path.join(current_dir, f))
-        return self._read_results()
+        result = self._read_results()
+        return result.get('flowy_end')
     

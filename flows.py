@@ -8,7 +8,7 @@ from .utils.evaluate import get_evaluator, EvaluateTemplate
 from time import sleep
 
 from pydantic import ValidationError
-from .models.pd.flow import Variable, EvaluatePayload, StartPayload, PausePayload
+from .models.pd.flow import Variable, EvaluatePayload, StartPayload, PausePayload, EndPayload
 
 
 # @web.rpc("flowy_make_request", "make_request")
@@ -73,6 +73,32 @@ def evaluate(flow_context: dict, eval_input: str, output_type: str = 'string'):
 @flow_tools.validator(flow_uid='evaluate')
 def evaluate_validate(**kwargs):
     return EvaluatePayload.validate(kwargs)
+
+
+@flow_tools.flow(
+    uid='end',
+    display_name='End',
+    tooltip='End',
+    icon_url='/flows/static/icons/evaluate.svg',
+    weight=90
+)
+def end(flow_context: dict, eval_input: str = None, output_type: str = 'string'):
+    try:
+        if eval_input:
+            return evaluate(flow_context, eval_input, output_type)
+        
+        config = flow_context.get('task_config')
+        parent = config['direct_parents'][0]
+        name = flow_context['tasks'][parent]['name']
+        value = flow_context['outputs'].get(name)
+        return {"ok": True, "result": value}
+    except Exception as e:
+        log.error(e)
+        return {"ok": False, "error": str(e)}
+
+@flow_tools.validator(flow_uid='end')
+def end_validate(**kwargs):
+    return EndPayload.validate(kwargs)
 
 
 @flow_tools.flow(
