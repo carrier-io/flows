@@ -19,6 +19,11 @@ class EvaluatePayload(BaseModel):
     output_format: Optional[str] = "string"
 
 
+class EndPayload(BaseModel):
+    eval_input: Optional[str] = None 
+    output_format: Optional[str] = "string"
+
+
 class PausePayload(BaseModel):
     wait_time_ms: int
 

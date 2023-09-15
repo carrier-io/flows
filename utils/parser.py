@@ -16,6 +16,7 @@ class FlowParser:
 
     def _find_parents(self, task_id):
         full_parents = []
+        direct_parents = []
         task_data = self.front_tasks.get(task_id)
 
         if not task_data:
@@ -30,19 +31,23 @@ class FlowParser:
         # Update the full parents list with all parent task IDs
         full_parents.extend(parent_task_ids)
 
+        # Find the direct parents (those that are directly connected)
+        direct_parents.extend(parent_task_ids)
+
         # Recursively find parents for each parent task
         for parent_id in parent_task_ids:
-            parent_full = self._find_parents(parent_id)
+            parent_full, _ = self._find_parents(parent_id)
             full_parents.extend(parent_full)
 
-        return list(set(full_parents))
+        return list(set(full_parents)), list(set(direct_parents))
 
     def _find_parent_lists(self):
         for task_id in self.front_tasks:
-            parents = self._find_parents(task_id)
+            parents, direct_parents = self._find_parents(task_id)
             data = self.back_tasks.setdefault(task_id, {})
             data['step'] = len(parents) + 1
             data['parent_list'] = parents
+            data['direct_parents'] = direct_parents
     
 
     def _populate_task_props(self):
@@ -59,8 +64,13 @@ class FlowParser:
                 data['on_failure'] = front_settings['on_failure']
                 data['log_results'] = front_settings['log_results']
             else:
+                names_mapping = {
+                    "start": "flowy_start",
+                    "end": "flowy_end"
+                }
                 name = self.front_tasks[task_id]['name']
-                data['name'] = "flowy_start" if name == "start" else ""
+                data['name'] = names_mapping.get(name)
+
 
     def _map_rpc_functions(self):
         # mapping = tasklib.get_tasks_to_rpc_mappings()

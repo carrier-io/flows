@@ -247,3 +247,32 @@
         }
     }
 }
+// END BLOCK
+"6": {
+    "id": 6,
+    "name": "end",
+    "data": {
+        "eval_input": "{% for item in similarities %}{% for output_item in item.output %}{% if 'similar' in output_item %}{{ output_item.similar }}\n{% endif %}{% endfor %}{% endfor %}",
+        "output_type": "string"
+    },
+    "class": "flow_node",
+    "html": "search",
+    "typenode": "vue",
+    "inputs": {
+        "input_1": {
+            "connections": [
+                {
+                    "node": "5",
+                    "input": "output_1"
+                }
+            ]
+        }
+    },
+    "outputs": {
+        "output_1": {
+            "connections": []
+        }
+    },
+    "pos_x": 404,
+    "pos_y": 255
+}
