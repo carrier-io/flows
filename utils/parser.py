@@ -43,6 +43,7 @@ class FlowParser:
             data = self.back_tasks.setdefault(task_id, {})
             data['step'] = len(parents) + 1
             data['parent_list'] = parents
+    
 
     def _populate_task_props(self):
         for task_id, data in self.back_tasks.items():

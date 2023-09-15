@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from queue import Empty
 from threading import Thread, Lock
+from copy import deepcopy
 
 from typing import Dict, List
 from pylon.core.tools import log
@@ -81,91 +82,99 @@ class FlowValidator:
 
 class FlowExecutor:
     SKIP_CHAR = "skip"
+    MAIN_OUTPUT_FILE = "main_output.json"
 
     def __init__(self, module, data):
-        log.info('initializing FlowExecutor with %s, %s', module, data)
         self.module = module
-        log.info('initializing FlowExecutor module')
         self.context = module.context
-        log.info('initializing FlowExecutor context')
         self.data = data
-        log.info('initializing FlowExecutor data')
         self.project_id = self.data.pop('project_id', None)
-        log.info('initializing FlowExecutor project_id')
         self.variables = self.data.get('variables', {})
-        log.info('initializing FlowExecutor variables')
         self.tasks = self.data.get('tasks', {})
-        log.info('initializing FlowExecutor tasks')
         self.run_id = self.data['run_id']
         # # data
         # data = {'drawflow': {'Home': {'data': {'2': {'id': 2, 'name': 'start', 'data': {
         #     'variables': [{'name': 'cutoff', 'type': 'float', 'value': '0.4'}]}, 'class': 'flow_node', 'html': 'start',
         #                                              'typenode': 'vue', 'inputs': {}, 'outputs': {'output_1': {}},
         #                                              'pos_x': 113, 'pos_y': 15}}}}}
-        log.info('initializing FlowExecutor run_id')
-        log.info('initializing FlowExecutor Done %s, %s', module, data)
 
-    def _read_outputs(self, parents):
-        prev_values = {}
+        # creating run_id folder
+        self._folder_path = OUTPUT_FOLDER.joinpath(self.run_id)
+        self._folder_path.mkdir(exist_ok=True)
 
-        folder_path = OUTPUT_FOLDER.joinpath(self.run_id)
-        folder_path.mkdir(exist_ok=True)
-        for parent in parents:
-            parent_path = os.path.join(folder_path, f"{parent}_out.json")
-            skip = self.tasks.get(parent, {}).get('on_failure') == self.SKIP_CHAR
+        # creating main output file
+        self._main_file_path = self._folder_path.joinpath(self.MAIN_OUTPUT_FILE)
+        self._main_file_path.touch(exist_ok=True)
+        self._write_to_file({}, self._main_file_path)
+        
+        self._file_lock = Lock()
+        self._stop_flow_lock = Lock()
+        self._stop_flow = False
 
-            if not os.path.exists(parent_path):
-                if skip:
-                    continue
-                raise PreviousTaskFailed("Previous task failed")
 
-            file = open(parent_path, 'r')
-            content = json.load(file)
+    def consider_stopping_flow(self, task_id, task_health):
+        if not (task_health or self._is_task_skippable(task_id)):
+            self._signal_task_failed()
 
-            if not content.get("ok"):
-                if skip:
-                    continue
-                raise PreviousTaskFailed("Previous task failed")
+    def _is_task_skippable(self, task_id):
+        return self.tasks.get(task_id, {}).get('on_failure') == self.SKIP_CHAR
 
-            name = self.tasks[parent]['name']
-            prev_values[name] = content["result"]
-            file.close()
-        return prev_values
+    def _signal_task_failed(self):        
+        with self._stop_flow_lock:
+            self._stop_flow = True
 
-    @staticmethod
-    def resolve_fields(payload, prev_context, var_context):
-        variable_pattern = r"([a-zA-Z0-9_]+)"
-        variables_pattern = r"{{variables\." + variable_pattern + r"}}"
-        prev_pattern = r"{{nodes\['" + variable_pattern + r"'\]\.?" + variable_pattern + r"?}}"
+    def _read_results(self):
+        with open(self._main_file_path, 'r') as file:
+            return json.load(file)
 
-        if isinstance(payload, dict):
+    def _write_result(self, task_id, result, joined_values: dict):
+        on_success_name = self.tasks[task_id].get('name')
+        if not (on_success_name and result['ok']):
+            return
+        # start node
+        if on_success_name == "flowy_start":
+            joined_values.update(result['result'])
+        else:
+            joined_values[on_success_name] = result['result']
+        #
+        with self._file_lock:
+            current_values: dict = self._read_results()
+            current_values.update(joined_values)
+            self._write_to_file(current_values, self._main_file_path)
+
+    def _write_to_file(self, result, output_path):
+        # logging output of the current step
+        myfile = Path(output_path)
+        myfile.touch(exist_ok=True)
+        #
+        with open(myfile, "w+") as out_file:
+            json.dump(result, out_file, indent=4)
+            
+
+    def _resolve_fields(self, original_value, values):
+        placeholder_pattern = r"{{([a-zA-Z0-9_]+)}}"
+        
+        if isinstance(original_value, dict):
             resolved_payload = {}
-            for key, value in payload.items():
-                resolved_value = FlowExecutor.resolve_fields(value, prev_context, var_context)
+            for key, value in original_value.items():
+                resolved_value = self._resolve_fields(value, values)
                 resolved_payload[key] = resolved_value
             return resolved_payload
-
-        elif isinstance(payload, list):
+        
+        elif isinstance(original_value, list):
             resolved_payload = []
-            for item in payload:
-                resolved_item = FlowExecutor.resolve_fields(item, prev_context, var_context)
+            for item in original_value:
+                resolved_item = self._resolve_fields(item, values)
                 resolved_payload.append(resolved_item)
             return resolved_payload
 
-        elif isinstance(payload, str):
-            if match := re.fullmatch(variables_pattern, payload):
+        elif isinstance(original_value, str):            
+            if match := re.fullmatch(placeholder_pattern, original_value):
                 name = match.group(1)
-                value = var_context[name]
+                value = values[name]
                 return value
-
-            elif match := re.fullmatch(prev_pattern, payload):
-                task_name = match.group(1)
-                attribute_name = match.group(2)
-                context = prev_context[task_name]
-                value = context if not attribute_name else context[attribute_name]
-                return value
-
-        return payload
+            
+        return original_value
 
     def generate_steps_conf(self, data: Dict):
         result: Dict[int, List[str]] = dict()
@@ -180,32 +189,32 @@ class FlowExecutor:
             result[step] = [task_id]
         return dict(sorted(result.items()))
 
-    def _execute_task(self, project_id, task_id, meta: dict):
-        log.info(f'Process started: {os.getpid()} -> {task_id}')
-        folder_path = OUTPUT_FOLDER.joinpath(self.run_id)
-        folder_path.mkdir(exist_ok=True)
-        output_path = os.path.join(folder_path, f"{task_id}_out.json")
-        prev_values = {}
+    def get_flow_context(self, prev_values):
+        return {
+            'project_id': self.project_id, 
+            'outputs': deepcopy(prev_values),
+            'module': self.module,
+        }
+
+    def _execute_task(self, project_id, task_id, meta):
+        log.info(f'Thread started: {os.getpid()} -> {task_id}')
+        output_path = self._folder_path.joinpath(f"{task_id}_out.json")
+        output_path.touch(exist_ok=True)
+
+        # Loading main joined results
+        prev_values = self._read_results() 
 
         # loading rpc function object
         rpc_name = flow_tools.get_rpc_name(meta['flow_meta']['uid'])
         rpc_obj = getattr(self.context.rpc_manager.timeout(10), rpc_name)
-        params = {'project_id': project_id}
-
-        # loading previous tasks outputs
-        try:
-            prev_values = self._read_outputs(meta['parent_list'])
-        except PreviousTaskFailed as e:
-            log.error(f"Process terminated: {os.getpid()} -> {task_id}\nReason: {str(e)}")
-            return
+        params = {'flow_context': self.get_flow_context(prev_values)}
 
         # filling params from inputed data
         for param_name, original_value in meta['params'].items():
-            # check for inferring input
             try:
-                value = FlowExecutor.resolve_fields(original_value, prev_values, self.variables)
+                value = self._resolve_fields(original_value, prev_values)
                 params[param_name] = value
-            except KeyError as e:
+            except KeyError:
                 error_msg = f"Failed to infer {param_name} for {original_value} in {task_id} task"
                 log.error(error_msg)
                 self.context.event_manager.fire_event("flows_node_finished", json.dumps({
@@ -214,13 +223,16 @@ class FlowExecutor:
                     "task_id": task_id,
                     "run_id": self.run_id
                 }))
-                return
+                return self.consider_stopping_flow(task_id, task_health=False)
+
 
         log.info('---------------------------')
-        log.info(f"RPC: {rpc_obj}")
-        log.info(f"PARAMS: {params}")
+        log.info(f"RPC: {rpc_name}")
         # Executing rpc function
         result = rpc_obj(**params)
+
+        # write joined results
+        self._write_result(task_id, result, prev_values)
 
         # Sending info regarding task completion
         rpc_name = flow_tools.get_rpc_name(meta['flow_meta']['uid'])
@@ -229,29 +241,29 @@ class FlowExecutor:
         result["run_id"] = self.run_id
         if (meta.get('log_results') and result['ok']) or not result['ok']:
             self.context.event_manager.fire_event("flows_node_finished", result)
+        
+        # logging output of the current step
+        self._write_to_file(result, output_path)
+        
+        # stop flow if current task failed and it is not skippable
+        self.consider_stopping_flow(task_id, result['ok'])
 
         log.info(f"Completed: {task_id}")
-
-        # logging output of the current step
-        myfile = Path(output_path)
-        myfile.touch(exist_ok=True)
-        #
-        with open(myfile, "w+") as out_file:
-            json.dump(result, out_file, indent=4)
 
     def run(self):
         #### MAIN
         log.info("FLOW STARTED...")
         self.context.sio.emit("flow_started", {"msg": "Workflow is started", "run_id": self.run_id})
-        output = self.data.pop('output', None)
-
-        # creating folder for this flow run
-        folder_path = OUTPUT_FOLDER.joinpath(self.run_id)
-        folder_path.mkdir(exist_ok=True)
 
         steps_data = self.generate_steps_conf(self.tasks)
         for step, task_ids in steps_data.items():
             log.info(f"Step {step} started")
+            
+            # stop when task failed                
+            if self._stop_flow:
+                log.info("FLOW ABORTED")
+                break
+            
             threads = []
             for task_id in task_ids:
                 task_config = self.tasks[task_id]
@@ -261,7 +273,8 @@ class FlowExecutor:
 
             for thread in threads:
                 thread.join()
-
+            
+            threads.clear()
             log.info(f"Step {step} finished")
         log.info(f"Flow execution DONE: {self.run_id}")
 
@@ -271,3 +284,5 @@ class FlowExecutor:
         # log.info(os.listdir(current_dir))
         # for f in os.listdir(current_dir):
         #     os.remove(os.path.join(current_dir, f))
+        return self._read_results()
+    
