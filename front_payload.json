@@ -87,19 +87,17 @@
                             "on_failure": 0,
                             "log_results": false
                         },
-                        "payload": {
-                            "input": "What is the capital of Uzbekistan",
-                            "context": "Capitals of countries",
-                            "integration_id": 1,
-                            "project_id": 1,
-                            "prompt_id": 1,
-                            "integration_settings": {
-                                "model_name": "text-bison@001",
-                                "temperature": 1,
-                                "max_decode_steps": 256,
-                                "top_p": 0.8,
-                                "top_k": 40
-                            }
+                        "input": "What is the capital of Uzbekistan",
+                        "context": "Capitals of countries",
+                        "integration_uid": "f3ced8bd-c5e2-431e-8739-ae3bfcd32cbd",
+                        "project_id": 1,
+                        "prompt_id": 1,
+                        "integration_settings": {
+                            "model_name": "text-bison@001",
+                            "temperature": 1,
+                            "max_decode_steps": 256,
+                            "top_p": 0.8,
+                            "top_k": 40
                         }
                     },
                     "class": "flow_node",

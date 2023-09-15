@@ -33,7 +33,7 @@ class EvaluateTemplate(metaclass=MyABC):
         try:
             environment = Environment()
             template = environment.from_string(self.query)
-            result = template.render(payload=self.payload)
+            result = template.render(**self.payload)
         except:
             log.critical(format_exc())
             raise Exception("Invalid jinja template in context")

@@ -32,7 +32,7 @@ def _make_request(method: str, jwt_token: str, url: str):
     inputs=0,
     weight=100
 )
-def start(project_id: int, variables: list):
+def start(flow_context: dict, variables: list):
     variable_dict = {}
     for variable in variables:
         try:
@@ -57,10 +57,12 @@ def start_validate(**kwargs):
     icon_url='/flows/static/icons/evaluate.svg',
     weight=90
 )
-def evaluate(project_id: int, eval_input: str, payload: dict, output_type: str = 'string'):
+def evaluate(flow_context: dict, eval_input: str, output_type: str = 'string'):
     try:
+        payload = flow_context.get('outputs')
+        module = flow_context.get("module")
         evaluate_class = get_evaluator(output_type)
-        evaluator: EvaluateTemplate = evaluate_class(eval_input, payload, output_type)
+        evaluator: EvaluateTemplate = evaluate_class(module, eval_input, payload, output_type)
         result = evaluator.evaluate()
     except Exception as e:
         log.error(e)
@@ -80,7 +82,7 @@ def evaluate_validate(**kwargs):
     icon_url='/flows/static/icons/pause.svg',
     weight=89
 )
-def pause(project_id: int, wait_time_ms: int):
+def pause(flow_context: dict, wait_time_ms: int):
     try:
         sleep_time = float(wait_time_ms) / 1000
         sleep(sleep_time)

@@ -11,3 +11,5 @@ class Event:
     def run_flow(self, context, event, data):
         flow = FlowExecutor(self, data)
         result = flow.run()
+        result = {"ok": True, "result": result, "run_id": flow.run_id}
+        context.sio.emit("flow_finished", result)
