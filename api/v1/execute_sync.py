@@ -55,8 +55,9 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
         backend_config['variables'] = validator.variables
 
         flow = FlowExecutor(self.module, backend_config)
-        output = flow.run()
-        
+        ok, output = flow.run()
+        if not ok:
+            return {"ok": False, "errors": output, "type": "runtime_error"}
         return {"ok": True, "result": output, "run_id": flow.run_id}, 200
 
 

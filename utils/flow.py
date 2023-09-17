@@ -92,6 +92,7 @@ class FlowExecutor:
         self.variables = self.data.get('variables', {})
         self.tasks = self.data.get('tasks', {})
         self.run_id = self.data['run_id']
+        self._errors = {}
         # # data
         # data = {'drawflow': {'Home': {'data': {'2': {'id': 2, 'name': 'start', 'data': {
         #     'variables': [{'name': 'cutoff', 'type': 'float', 'value': '0.4'}]}, 'class': 'flow_node', 'html': 'start',
@@ -217,6 +218,7 @@ class FlowExecutor:
             except KeyError:
                 error_msg = f"Failed to infer {param_name} for {original_value} in {task_id} task"
                 log.error(error_msg)
+                self._errors[task_id] = error_msg
                 self.context.event_manager.fire_event("flows_node_finished", json.dumps({
                     "ok": False,
                     "error": error_msg,
@@ -239,6 +241,10 @@ class FlowExecutor:
         result["rpc_name"] = rpc_name
         result["task_id"] = task_id
         result["run_id"] = self.run_id
+
+        if not result['ok']:
+            self._errors[task_id] = result.get('error')
+
         if (meta.get('log_results') and result['ok']) or not result['ok']:
             self.context.event_manager.fire_event("flows_node_finished", result)
         
@@ -284,6 +290,11 @@ class FlowExecutor:
         # log.info(os.listdir(current_dir))
         # for f in os.listdir(current_dir):
         #     os.remove(os.path.join(current_dir, f))
+        if self._errors:
+            return False, self._errors
+
         result = self._read_results()
-        return result.get('flowy_end')
+        return True, result.get('flowy_end')
+
+
     
