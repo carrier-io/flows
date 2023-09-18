@@ -214,7 +214,7 @@ class FlowExecutor:
             try:
                 value = self._resolve_fields(original_value, prev_values)
                 params[param_name] = value
-            except KeyError:
+            except Exception:
                 error_msg = f"Failed to infer {param_name} for {original_value} in {task_id} task"
                 log.error(error_msg)
                 self._errors[task_id] = error_msg
