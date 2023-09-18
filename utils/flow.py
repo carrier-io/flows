@@ -8,6 +8,7 @@ from copy import deepcopy
 
 from typing import Dict, List
 from pylon.core.tools import log
+from jinja2 import Environment
 
 from tools import flow_tools
 
@@ -151,8 +152,7 @@ class FlowExecutor:
             json.dump(result, out_file, indent=4)
 
     def _resolve_fields(self, original_value, values):
-        placeholder_pattern = r"{{([a-zA-Z0-9_]+)}}"
-        
+
         if isinstance(original_value, dict):
             resolved_payload = {}
             for key, value in original_value.items():
@@ -167,12 +167,11 @@ class FlowExecutor:
                 resolved_payload.append(resolved_item)
             return resolved_payload
 
-        elif isinstance(original_value, str):            
-            if match := re.fullmatch(placeholder_pattern, original_value):
-                name = match.group(1)
-                value = values[name]
-                return value
-            
+        elif isinstance(original_value, str):
+            environment = Environment()
+            template = environment.from_string(original_value)
+            result = template.render(**values)           
+            return result
         return original_value
 
     def generate_steps_conf(self, data: Dict):

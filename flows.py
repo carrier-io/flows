@@ -59,10 +59,9 @@ def start_validate(**kwargs):
 )
 def evaluate(flow_context: dict, eval_input: str, output_type: str = 'string'):
     try:
-        payload = flow_context.get('outputs')
         module = flow_context.get("module")
         evaluate_class = get_evaluator(output_type)
-        evaluator: EvaluateTemplate = evaluate_class(module, eval_input, payload, output_type)
+        evaluator: EvaluateTemplate = evaluate_class(module, eval_input, output_type)
         result = evaluator.evaluate()
     except Exception as e:
         log.error(e)
