@@ -152,6 +152,7 @@ class FlowExecutor:
             json.dump(result, out_file, indent=4)
 
     def _resolve_fields(self, original_value, values):
+        placeholder_pattern = r"\s*{{\s*([a-zA-Z0-9_]+)\s*}}\s*"
 
         if isinstance(original_value, dict):
             resolved_payload = {}
@@ -168,10 +169,17 @@ class FlowExecutor:
             return resolved_payload
 
         elif isinstance(original_value, str):
-            environment = Environment(undefined=DebugUndefined)
-            template = environment.from_string(original_value)
-            result = template.render(**values)           
-            return result
+            if match := re.fullmatch(placeholder_pattern, original_value):
+                log.info("ORIGINAL VALUE %s", original_value)
+                name = match.group(1)
+                value = values[name]
+                log.info("VALUE %s", value)
+                return value
+            else:
+                environment = Environment(undefined=DebugUndefined)
+                template = environment.from_string(original_value)
+                result = template.render(**values)           
+                return result
         return original_value
 
     def generate_steps_conf(self, data: Dict):
