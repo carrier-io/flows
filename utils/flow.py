@@ -8,7 +8,7 @@ from copy import deepcopy
 
 from typing import Dict, List
 from pylon.core.tools import log
-from jinja2 import Environment
+from jinja2 import Environment, DebugUndefined
 
 from tools import flow_tools
 
@@ -168,7 +168,7 @@ class FlowExecutor:
             return resolved_payload
 
         elif isinstance(original_value, str):
-            environment = Environment()
+            environment = Environment(undefined=DebugUndefined)
             template = environment.from_string(original_value)
             result = template.render(**values)           
             return result
