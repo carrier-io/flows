@@ -170,10 +170,8 @@ class FlowExecutor:
 
         elif isinstance(original_value, str):
             if match := re.fullmatch(placeholder_pattern, original_value):
-                log.info("ORIGINAL VALUE %s", original_value)
                 name = match.group(1)
                 value = values[name]
-                log.info("VALUE %s", value)
                 return value
             else:
                 environment = Environment(undefined=DebugUndefined)
