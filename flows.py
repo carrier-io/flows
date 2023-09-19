@@ -32,21 +32,16 @@ def _make_request(method: str, jwt_token: str, url: str):
     inputs=0,
     weight=100
 )
-def start(flow_context: dict, variables: list):
-    variable_dict = {}
-    for variable in variables:
-        try:
-            # Use Pydantic to validate and convert the variable
-            variable = Variable(**variable)
-            variable_dict[variable.name] = variable.value
-        except ValidationError as e:
-            return {"ok": False, "error": f"Error: {e}", "errors": e.errors()}
-    return {"ok": True, 'result': variable_dict}
+def start(flow_context: dict, clean_data: dict):
+    result = {
+        variable['name']: variable['value'] 
+        for variable in clean_data['variables']
+    }
+    return {"ok": True, 'result': result}
 
 
 @flow_tools.validator(flow_uid='start')
 def start_validate(**kwargs):
-    log.info(f'rpc validator called {kwargs}')
     return StartPayload.validate(kwargs)
 
 
@@ -57,7 +52,9 @@ def start_validate(**kwargs):
     icon_url='/flows/static/icons/evaluate.svg',
     weight=90
 )
-def evaluate(flow_context: dict, eval_input: str, output_type: str = 'string'):
+def evaluate(flow_context: dict, clean_data: dict):
+    output_type = clean_data.get('output_type', "string")
+    eval_input = clean_data['eval_input']
     try:
         module = flow_context.get("module")
         evaluate_class = get_evaluator(output_type)
@@ -81,10 +78,11 @@ def evaluate_validate(**kwargs):
     icon_url='/flows/static/icons/evaluate.svg',
     weight=90
 )
-def end(flow_context: dict, eval_input: str = None, output_type: str = 'string'):
+def end(flow_context: dict, clean_data:dict):
+    eval_input = clean_data['eval_input']
     try:
         if eval_input:
-            return evaluate(flow_context, eval_input, output_type)
+            return evaluate(flow_context, clean_data)
         
         config = flow_context.get('task_config')
         parent = config['direct_parents'][0]
@@ -107,9 +105,9 @@ def end_validate(**kwargs):
     icon_url='/flows/static/icons/pause.svg',
     weight=89
 )
-def pause(flow_context: dict, wait_time_ms: int):
+def pause(flow_context: dict, clean_data: dict):
     try:
-        sleep_time = float(wait_time_ms) / 1000
+        sleep_time = clean_data['wait_time_ms'] / 1000
         sleep(sleep_time)
     except Exception as e:
         log.error(e)

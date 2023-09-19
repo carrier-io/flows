@@ -9,6 +9,7 @@ from copy import deepcopy
 from typing import Dict, List
 from pylon.core.tools import log
 from jinja2 import Environment, DebugUndefined
+from pydantic import ValidationError
 
 from tools import flow_tools
 
@@ -202,6 +203,19 @@ class FlowExecutor:
             'tasks': self.tasks
         }
 
+    def _call_rpc_function(self, rpc_name, params):
+        rpc_obj = getattr(self.context.rpc_manager.timeout(10), rpc_name)
+        return rpc_obj(**params)
+
+    def _call_pre_run_validation(self, uid, params):
+        validotor_rpc_name = flow_tools.get_pre_run_validator_rpc_name(uid)
+        return self._call_rpc_function(validotor_rpc_name, params)
+
+    def _call_run_task(self, uid, params):
+        # Executing rpc function
+        rpc_name = flow_tools.get_rpc_name(uid)
+        return self._call_rpc_function(rpc_name, params)
+
     def _execute_task(self, project_id, task_id, meta):
         log.info(f'Thread started: {os.getpid()} -> {task_id}')
         output_path = self._folder_path.joinpath(f"{task_id}_out.json")
@@ -211,9 +225,8 @@ class FlowExecutor:
         prev_values = self._read_results() 
 
         # loading rpc function object
-        rpc_name = flow_tools.get_rpc_name(meta['flow_meta']['uid'])
-        rpc_obj = getattr(self.context.rpc_manager.timeout(10), rpc_name)
-        params = {'flow_context': self.get_flow_context(prev_values, meta)}
+        uid = meta['flow_meta']['uid']
+        params = {}
 
         # filling params from inputed data
         for param_name, original_value in meta['params'].items():
@@ -233,16 +246,23 @@ class FlowExecutor:
                 return self.consider_stopping_flow(task_id, task_health=False)
 
 
-        log.info('---------------------------')
-        log.info(f"RPC: {rpc_name}")
-        # Executing rpc function
-        result = rpc_obj(**params)
+        # run pre-run validation
+        result = self._call_pre_run_validation(uid, params)
+        
+        # if validation was successfull run task itself
+        if result['ok']:
+            params = {
+                'flow_context': self.get_flow_context(prev_values, meta),
+                'clean_data': result['result']
+            }
+            result = self._call_run_task(uid, params)
 
         # write joined results
         self._write_result(task_id, result, prev_values)
 
         # Sending info regarding task completion
         rpc_name = flow_tools.get_rpc_name(meta['flow_meta']['uid'])
+        result['name'] = uid
         result["rpc_name"] = rpc_name
         result["task_id"] = task_id
         result["run_id"] = self.run_id
@@ -260,6 +280,7 @@ class FlowExecutor:
         self.consider_stopping_flow(task_id, result['ok'])
 
         log.info(f"Completed: {task_id}")
+
 
     def run(self):
         #### MAIN

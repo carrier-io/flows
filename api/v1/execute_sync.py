@@ -60,7 +60,7 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
         flow = FlowExecutor(self.module, backend_config)
         ok, output = flow.run()
         if not ok:
-            return {"ok": False, "error": output, "type": "execution_error"}, 400
+            return {"ok": False, "error": output, "type": "execution_error", "run_id": flow.run_id}, 400
         return {"ok": True, "result": output, "run_id": flow.run_id}, 200
 
 
