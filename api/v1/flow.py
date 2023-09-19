@@ -54,35 +54,42 @@ class ProjectAPI(api_tools.APIModeHandler):
         except InvalidTaskNames as e:
             return {
                 "ok": False,
+                "many": False,
                 "error": {
                     "msg": str(e),
                     "invalid_names": e.invalid_names,
                 },
-                "type": "parse_error"
-            }
+                "type": "parse_error",
+            }, 400
+        except Exception as e:
+            return {"ok": False, "error": str(e), "type": "parse_error"}, 400
 
         backend_config['project_id'] = project_id
         backend_config['run_id'] = str(uuid.uuid4())
 
-        log.info('Validating flow %s', backend_config)
         validator = FlowValidator(self.module, backend_config)
         errors = validator.validate()
         if errors:
-            response = {"ok": False, "errors": errors, "type": "validation_error"}
+            response = {"ok": False, "error": errors, "type": "validation_error"}
             return response, 400
-        log.info('Validating passed')
 
         backend_config['variables'] = validator.variables
 
-        result = None
+        result = {'ok': True, 'run_id': backend_config['run_id'], 'config': backend_config}
         if run_async:
             self.module.context.event_manager.fire_event('flows_run_flow', backend_config)
         else:
             log.info('FlowExecutor %s', backend_config)
             flow = FlowExecutor(self.module, backend_config)
             log.info('Running flow')
-            result = flow.run()
-        return {"ok": True, "config": backend_config, "result": result}, 200
+            ok, run_output = flow.run()
+            result['ok'] = bool(ok)
+            if ok:
+                result['result'] = run_output
+            else:
+                result['error'] = run_output
+                result['type'] = 'execution_error'
+        return result, 200 if result['ok'] else 400
 
     @auth.decorators.check_api({
         "permissions": ["models.flows.flow.update"],
