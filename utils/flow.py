@@ -8,6 +8,8 @@ from copy import deepcopy
 
 from typing import Dict, List
 from pylon.core.tools import log
+from jinja2 import Environment, DebugUndefined
+from pydantic import ValidationError
 
 from tools import flow_tools
 
@@ -92,6 +94,7 @@ class FlowExecutor:
         self.variables = self.data.get('variables', {})
         self.tasks = self.data.get('tasks', {})
         self.run_id = self.data['run_id']
+        self._errors = {}
         # # data
         # data = {'drawflow': {'Home': {'data': {'2': {'id': 2, 'name': 'start', 'data': {
         #     'variables': [{'name': 'cutoff', 'type': 'float', 'value': '0.4'}]}, 'class': 'flow_node', 'html': 'start',
@@ -150,8 +153,8 @@ class FlowExecutor:
             json.dump(result, out_file, indent=4)
 
     def _resolve_fields(self, original_value, values):
-        placeholder_pattern = r"{{([a-zA-Z0-9_]+)}}"
-        
+        placeholder_pattern = r"\s*{{\s*([a-zA-Z0-9_]+)\s*}}\s*"
+
         if isinstance(original_value, dict):
             resolved_payload = {}
             for key, value in original_value.items():
@@ -166,12 +169,16 @@ class FlowExecutor:
                 resolved_payload.append(resolved_item)
             return resolved_payload
 
-        elif isinstance(original_value, str):            
+        elif isinstance(original_value, str):
             if match := re.fullmatch(placeholder_pattern, original_value):
                 name = match.group(1)
                 value = values[name]
                 return value
-            
+            else:
+                environment = Environment(undefined=DebugUndefined)
+                template = environment.from_string(original_value)
+                result = template.render(**values)           
+                return result
         return original_value
 
     def generate_steps_conf(self, data: Dict):
@@ -196,6 +203,19 @@ class FlowExecutor:
             'tasks': self.tasks
         }
 
+    def _call_rpc_function(self, rpc_name, params):
+        rpc_obj = getattr(self.context.rpc_manager.timeout(10), rpc_name)
+        return rpc_obj(**params)
+
+    def _call_pre_run_validation(self, uid, params):
+        validotor_rpc_name = flow_tools.get_pre_run_validator_rpc_name(uid)
+        return self._call_rpc_function(validotor_rpc_name, params)
+
+    def _call_run_task(self, uid, params):
+        # Executing rpc function
+        rpc_name = flow_tools.get_rpc_name(uid)
+        return self._call_rpc_function(rpc_name, params)
+
     def _execute_task(self, project_id, task_id, meta):
         log.info(f'Thread started: {os.getpid()} -> {task_id}')
         output_path = self._folder_path.joinpath(f"{task_id}_out.json")
@@ -205,18 +225,18 @@ class FlowExecutor:
         prev_values = self._read_results() 
 
         # loading rpc function object
-        rpc_name = flow_tools.get_rpc_name(meta['flow_meta']['uid'])
-        rpc_obj = getattr(self.context.rpc_manager.timeout(10), rpc_name)
-        params = {'flow_context': self.get_flow_context(prev_values, meta)}
+        uid = meta['flow_meta']['uid']
+        params = {}
 
         # filling params from inputed data
         for param_name, original_value in meta['params'].items():
             try:
                 value = self._resolve_fields(original_value, prev_values)
                 params[param_name] = value
-            except KeyError:
+            except Exception:
                 error_msg = f"Failed to infer {param_name} for {original_value} in {task_id} task"
                 log.error(error_msg)
+                self._errors[task_id] = error_msg
                 self.context.event_manager.fire_event("flows_node_finished", json.dumps({
                     "ok": False,
                     "error": error_msg,
@@ -226,19 +246,30 @@ class FlowExecutor:
                 return self.consider_stopping_flow(task_id, task_health=False)
 
 
-        log.info('---------------------------')
-        log.info(f"RPC: {rpc_name}")
-        # Executing rpc function
-        result = rpc_obj(**params)
+        # run pre-run validation
+        result = self._call_pre_run_validation(uid, params)
+        
+        # if validation was successfull run task itself
+        if result['ok']:
+            params = {
+                'flow_context': self.get_flow_context(prev_values, meta),
+                'clean_data': result['result']
+            }
+            result = self._call_run_task(uid, params)
 
         # write joined results
         self._write_result(task_id, result, prev_values)
 
         # Sending info regarding task completion
         rpc_name = flow_tools.get_rpc_name(meta['flow_meta']['uid'])
+        result['name'] = uid
         result["rpc_name"] = rpc_name
         result["task_id"] = task_id
         result["run_id"] = self.run_id
+
+        if not result['ok']:
+            self._errors[task_id] = result.get('error')
+
         if (meta.get('log_results') and result['ok']) or not result['ok']:
             self.context.event_manager.fire_event("flows_node_finished", result)
         
@@ -249,6 +280,7 @@ class FlowExecutor:
         self.consider_stopping_flow(task_id, result['ok'])
 
         log.info(f"Completed: {task_id}")
+
 
     def run(self):
         #### MAIN
@@ -284,6 +316,11 @@ class FlowExecutor:
         # log.info(os.listdir(current_dir))
         # for f in os.listdir(current_dir):
         #     os.remove(os.path.join(current_dir, f))
+        if self._errors:
+            return False, self._errors
+
         result = self._read_results()
-        return result.get('flowy_end')
+        return True, result.get('flowy_end')
+
+
     

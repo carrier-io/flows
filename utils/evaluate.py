@@ -23,17 +23,16 @@ class MyABC(ABCMeta):
 
 
 class EvaluateTemplate(metaclass=MyABC):
-    def __init__(self, module, query: str, payload: dict, output_format: str):
+    def __init__(self, module, query: str, output_format: str):
         self.context = module.context
         self.query = query
-        self.payload = payload
         self.output_format = output_format
 
     def extract(self):
         try:
             environment = Environment()
             template = environment.from_string(self.query)
-            result = template.render(**self.payload)
+            result = template.render()
         except:
             log.critical(format_exc())
             raise Exception("Invalid jinja template in context")

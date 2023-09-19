@@ -35,13 +35,16 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
             backend_config = parser.parse()
         except InvalidTaskNames as e:
             return {
-                "ok": False, 
+                "ok": False,
+                "many": False,
                 "error": {
                     "msg": str(e),
                     "invalid_names": e.invalid_names,
                 }, 
-                "type": "parse_error"
-            }
+                "type": "parse_error",
+            }, 400
+        except Exception as e:
+            return {"ok": False, "error": str(e), "type": "parse_error"}, 400
 
         backend_config['project_id'] = project_id
         backend_config['run_id'] = str(uuid.uuid4())
@@ -49,14 +52,15 @@ class ProjectAPI(api_tools.APIModeHandler):  # pylint: disable=R0903
         validator = FlowValidator(self.module, backend_config)
         errors = validator.validate()
         if errors:
-            response = {"ok": False, "errors": errors, "type": "validation_error"}
+            response = {"ok": False, "error": errors, "type": "validation_error"}
             return response, 400
         
         backend_config['variables'] = validator.variables
 
         flow = FlowExecutor(self.module, backend_config)
-        output = flow.run()
-        
+        ok, output = flow.run()
+        if not ok:
+            return {"ok": False, "error": output, "type": "execution_error", "run_id": flow.run_id}, 400
         return {"ok": True, "result": output, "run_id": flow.run_id}, 200
 
 
