@@ -34,7 +34,7 @@ def _make_request(method: str, jwt_token: str, url: str):
 )
 def start(flow_context: dict, clean_data: dict):
     result = {
-        variable['name']: variable['value'] 
+        variable['name']: variable['value']
         for variable in clean_data['variables']
     }
     return {"ok": True, 'result': result}
@@ -75,15 +75,16 @@ def evaluate_validate(**kwargs):
     uid='end',
     display_name='End',
     tooltip='End',
-    icon_url='/flows/static/icons/evaluate.svg',
-    weight=90
+    icon_url='/flows/static/icons/stop.svg',
+    outputs=0,
+    weight=5,
 )
-def end(flow_context: dict, clean_data:dict):
+def end(flow_context: dict, clean_data: dict):
     eval_input = clean_data['eval_input']
     try:
         if eval_input:
             return evaluate(flow_context, clean_data)
-        
+
         config = flow_context.get('task_config')
         parent = config['direct_parents'][0]
         name = flow_context['tasks'][parent]['name']
@@ -92,6 +93,7 @@ def end(flow_context: dict, clean_data:dict):
     except Exception as e:
         log.error(e)
         return {"ok": False, "error": str(e)}
+
 
 @flow_tools.validator(flow_uid='end')
 def end_validate(**kwargs):
@@ -126,7 +128,7 @@ def pause_validate(**kwargs):
     tooltip='Test',
     icon_fa='fa fa-times fa-xl',
     inputs=1,
-    weight=1
+    weight=7
 )
 def tst(arg1='DEFAULT', **kwargs):
     log.info(f'Executing tst with {arg1=}')

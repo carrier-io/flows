@@ -31,6 +31,15 @@ class EvaluateTemplate(metaclass=MyABC):
     def extract(self):
         try:
             environment = Environment()
+
+            def json_loads_filter(json_string: str, do_replace: bool = False):
+                import json
+                if do_replace:
+                    json_string = json_string.replace("'", "\"")
+                return json.loads(json_string)
+
+            environment.filters['json_loads'] = json_loads_filter
+
             template = environment.from_string(self.query)
             result = template.render()
         except:

@@ -37,7 +37,8 @@ const FlowWindow = {
             })
             this.is_loading = false
             if (resp.ok) {
-                showNotify('SUCCESS', 'Flow finished')
+                const {config} = await resp.json()
+                showNotify('SUCCESS', `Flow finished ${config.run_id}`)
             } else {
                 showNotify('ERROR', 'Flow run error')
                 this.handleValidationErrors(await resp.json())

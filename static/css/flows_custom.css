@@ -124,3 +124,7 @@
     border: 2px solid #ff00004d;
     border-radius: 3px;
 }
+
+#FlowsTable tr[data-index] {
+    cursor: pointer;
+}

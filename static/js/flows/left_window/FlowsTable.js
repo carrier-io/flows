@@ -29,9 +29,6 @@ const FlowsTable = {
     mounted() {
         const $table = $(this.$refs.table)
         $table.on('click-row.bs.table', this.handleRowClick)
-        $table.on('post-body.bs.table', () => {
-            $table.find('tr').css('cursor', 'pointer')
-        })
     },
     methods: {
         handleSelectRow(tr, data) {
@@ -64,6 +61,7 @@ const FlowsTable = {
     },
     template: `
     <table
+        id="FlowsTable"
         class="table table-borderless"
         :data-url="tableUrl"
         data-toggle="table"

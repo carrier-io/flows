@@ -26,7 +26,9 @@ class ProjectAPI(api_tools.APIModeHandler):
         }})
     def get(self, project_id: int):
         with db.with_project_schema_session(project_id) as session:
-            flows = session.query(Flow).options(load_only(Flow.id, Flow.name)).all()
+            flows = session.query(Flow).options(
+                load_only(Flow.id, Flow.name)
+            ).order_by(Flow.id.asc()).all()
             return [FlowListModel.from_orm(i).dict() for i in flows], 200
 
     @auth.decorators.check_api({
