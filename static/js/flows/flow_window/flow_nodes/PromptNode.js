@@ -9,7 +9,7 @@ const PromptNode = {
         return {
             flow_handle_settings: {
                 on_success: '',
-                on_failure: 0,
+                on_failure: constants.on_failure_options[0].value,
                 log_results: false
             },
             prompt_name: null,
@@ -301,10 +301,18 @@ const PromptNode = {
                     <div class="mt-2">
                         <span class="font-h5 font-weight-bold">Token limit</span>
                         <ConnectedSlider 
-                            v-if="options.selectedTabIndex === 1"
+                            v-if="options.selectedTabIndex === 1 && model_settings.max_tokens !== undefined"
                             v-model="model_settings.max_tokens"
                             :min="1"
                             :max="32000"
+                            :step="1"
+                            :format="window.wNumb({decimals: 0})"
+                        ></ConnectedSlider>
+                        <ConnectedSlider 
+                            v-if="options.selectedTabIndex === 1 && model_settings.max_decode_steps !== undefined"
+                            v-model="model_settings.max_decode_steps"
+                            :min="1"
+                            :max="2048"
                             :step="1"
                             :format="window.wNumb({decimals: 0})"
                         ></ConnectedSlider>

@@ -7,7 +7,7 @@ const EvaluateNode = {
         return {
             flow_handle_settings: {
                 on_success: '',
-                on_failure: 0,
+                on_failure: constants.on_failure_options[0].value,
                 log_results: false
             },
             eval_input: '',

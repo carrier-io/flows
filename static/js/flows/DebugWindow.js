@@ -101,7 +101,7 @@ const export2 = {
           "data": {
             "flow_handle_settings": {
               "on_success": "",
-              "on_failure": 0,
+              "on_failure": 'stop',
               "log_results": false
             },
             "variables": [],
@@ -165,7 +165,7 @@ const export3 = {
           "data": {
             "flow_handle_settings": {
               "on_success": "some",
-              "on_failure": 0,
+              "on_failure": 'stop',
               "log_results": false
             },
             "prompt_name": "another_one",

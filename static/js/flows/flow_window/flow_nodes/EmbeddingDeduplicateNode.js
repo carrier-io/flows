@@ -8,7 +8,7 @@ const EmbeddingDeduplicateNode = {
             embedding_id: null,
             flow_handle_settings: {
                 on_success: '',
-                on_failure: 0,
+                on_failure: constants.on_failure_options[0].value,
                 log_results: false
             },
             cutoff: 0.6,
