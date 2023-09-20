@@ -4,7 +4,8 @@ const FlowWindow = {
     data() {
         return {
             flow_blocks: [],
-            is_loading: false
+            is_loading: false,
+            tracked_run_ids: {}
         }
     },
     async mounted() {
@@ -20,25 +21,29 @@ const FlowWindow = {
                 showNotify('ERROR', 'Unable to fetch flow items')
             }
         })
+        window.socket.on(constants.sio_events.node_finished, this.handleSioNodeFinished)
+        window.socket.on(constants.sio_events.flow_finished, this.handleSioFlowFinished)
+        window.socket.on(constants.sio_events.flow_started, this.handleSioFlowStarted)
 
     },
     methods: {
         async handleRunFlow() {
-            this.clearValidationErrors()
+            this.restoreNodeStates()
             const api_url = this.$root.build_api_url('flows', 'flow')
             this.is_loading = true
             const resp = await fetch(api_url + '/' + this.$root.project_id + '/' + this.selectedFlow.id, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    async: false,
+                    async: true,
                     flow_data: this.$refs.DrawFlowStuff.editor.export()
                 })
             })
             this.is_loading = false
             if (resp.ok) {
                 const {run_id} = await resp.json()
-                showNotify('SUCCESS', `Flow finished ${run_id}`)
+                this.tracked_run_ids[this.selectedFlow.id] = run_id
+                showNotify('SUCCESS', `Flow started ${run_id}`)
             } else {
                 showNotify('ERROR', 'Flow run error')
                 this.handleValidationErrors(await resp.json())
@@ -66,21 +71,91 @@ const FlowWindow = {
             const {errors} = errors_json
             Object.entries(errors).forEach(([node_id, error_data]) => {
                 const vue_data = this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data[node_id].data
-                if (vue_data.options) { vue_data.options.validation_errors = error_data }
+                if (vue_data.options) {
+                    vue_data.options.validation_errors = error_data
+                }
             })
         },
         clearValidationErrors() {
             Object.entries(
                 this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data
             ).forEach(([node_id, {data}]) => {
-                if (data.options) { data.options.validation_errors = [] }
+                if (data.options) {
+                    data.options.validation_errors = []
+                }
             })
         },
-        handleSioEvents() {
-            window.socket.on("flows_node_finished", data => {
-                console.log('sio event', 'flows_node_finished', data)
+        setAllNodesStatus(status) {
+            Object.entries(
+                this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data
+            ).forEach(([node_id, {data}]) => {
+                if (data.options) {
+                    data.options.status = status
+                }
             })
-        }
+        },
+        clearNodeStatus() {
+            this.setAllNodesStatus(constants.node_statuses.idle)
+        },
+        setNodesRunning() {
+            this.setAllNodesStatus(constants.node_statuses.running)
+        },
+        setNodesFinished() {
+            this.setAllNodesStatus(constants.node_statuses.success)
+        },
+        restoreNodeStates() {
+            this.clearValidationErrors()
+            this.setNodesRunning()
+        },
+        checkEventRunId(run_id) {
+            return run_id === this.tracked_run_ids[this.selectedFlow.id]
+        },
+        handleSioNodeFinished(data) {
+            console.log('sio event', 'flows_node_finished', data)
+            const {ok, result, run_id, task_id: node_id} = data
+            if (this.checkEventRunId(run_id)) {
+                const data_ref = this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data[node_id].data
+                if (data_ref.options) {
+                    data_ref.options.logs = result
+                    data_ref.options.status = ok ? constants.node_statuses.success : constants.node_statuses.error
+                }
+            } else {
+                console.warn('Received sio for untracked flow. rid:', run_id)
+            }
+        },
+        handleSioFlowStarted(data) {
+            const {run_id} = data
+            console.log('flow started', data)
+            if (this.checkEventRunId(run_id)) {
+                const [_, start_node] = Object.entries(
+                    this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data
+                ).find(([node_id, {name}]) => {
+                    return name === 'start'
+                })
+                console.log(start_node)
+                start_node.data.options.status = constants.node_statuses.success
+            }
+        },
+        handleSioFlowFinished(data) {
+            const {ok, result, run_id} = data
+            if (this.checkEventRunId(run_id)) {
+                this.setNodesFinished()
+                if (ok) {
+                    const [_, end_node] = Object.entries(
+                        this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data
+                    ).find(([node_id, {name}]) => {
+                        return name === 'end'
+                    })
+                    end_node.data.options.status = constants.node_statuses.success
+                    end_node.data.options.result = result
+                    showNotify('SUCCESS', 'Flow finished')
+                } else {
+                    this.handleValidationErrors({errors: data.error})
+                    showNotify('WARNING', 'Flow had some errors')
+                }
+                console.log('flow finished', data)
+            }
+        },
     },
     computed: {},
     template: `

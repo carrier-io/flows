@@ -1,4 +1,4 @@
-const StartNodeComponent = {
+const StartNode = {
     props: ['node_meta', 'node_data', 'node_id'],
     components: {
         'VariablesInput': Vue.markRaw(VariablesInput)
@@ -56,7 +56,12 @@ const StartNodeComponent = {
     },
     template: `
     <div class="d-flex flex-column p-3"
-        :class="{'flow_validation_error': options.validation_errors.length}"
+        :class="{
+            'flow_validation_error': options.validation_errors?.length,
+            'flow_validation_error': options.status === window.constants.node_statuses.error,
+            'flow_node_running': options.status === window.constants.node_statuses.running,
+            'flow_node_success': options.status === window.constants.node_statuses.success,
+        }"
     >
         
         <div class="d-flex">

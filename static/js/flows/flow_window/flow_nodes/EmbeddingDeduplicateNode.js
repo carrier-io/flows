@@ -17,7 +17,8 @@ const EmbeddingDeduplicateNode = {
                 sliderCutoff: undefined,
                 selectedTabIndex: 0,
                 tabs: ['Data', 'Advanced', 'Logs'],
-                logs: 'Logs will be here'
+                logs: '',
+                status: constants.node_statuses.idle,
             }
         }
     },
@@ -78,7 +79,14 @@ const EmbeddingDeduplicateNode = {
         },
     },
     template: `
-    <div class="d-flex flex-column">
+    <div class="d-flex flex-column"
+        :class="{
+            'flow_validation_error': options.validation_errors?.length,
+            'flow_validation_error': options.status === window.constants.node_statuses.error,
+            'flow_node_running': options.status === window.constants.node_statuses.running,
+            'flow_node_success': options.status === window.constants.node_statuses.success,
+        }"
+    >
         <div class="d-flex align-items-center p-3">
             <div class="flex-grow-1">
                 <span class="font-h6 text-capitalize">

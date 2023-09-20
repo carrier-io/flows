@@ -4,6 +4,7 @@ const GenericNodeComponent = {
         return {
             options: {
                 properties_open: false,
+                status: constants.node_statuses.idle
             }
         }
     },
@@ -11,21 +12,6 @@ const GenericNodeComponent = {
         load_node_data(this)
     },
     methods: {
-        // attachDataProxy() {
-        //     const handler = id => {
-        //         console.log("E listener here id:", id, '  my id: ', this.node_id)
-        //         if (id === this.node_id) {
-        //             V.registered_components.DrawFlowStuff.editor.drawflow.drawflow.Home.data[this.node_id].data = this.$data
-        //             console.log("Node data attached: ", id)
-        //             V.registered_components.DrawFlowStuff.editor.removeListener('nodeCreated', handler)
-        //         }
-        //     }
-        //     V.registered_components.DrawFlowStuff.editor.on('nodeCreated', handler)
-        // },
-        handleNotify() {
-            showNotify('INFO', 'Settings for node')
-            this.options.properties_open = !this.options.properties_open
-        }
     },
     watch: {
         'window.V.custom_data.selected_node': function(newValue) {
@@ -35,7 +21,14 @@ const GenericNodeComponent = {
         },
     },
     template: `
-    <div class="d-flex flex-column">
+    <div class="d-flex flex-column"
+        :class="{
+            'flow_validation_error': options.validation_errors?.length,
+            'flow_validation_error': options.status === window.constants.node_statuses.error,
+            'flow_node_running': options.status === window.constants.node_statuses.running,
+            'flow_node_success': options.status === window.constants.node_statuses.success,
+        }"
+    >
         <div class="d-flex align-items-center p-3">
             <div class="flex-grow-1">
                 <span class="font-h6 text-capitalize">

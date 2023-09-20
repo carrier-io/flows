@@ -5,12 +5,12 @@ const EmbeddingSearchNode = {
     },
     data() {
         return {
-            embedding_id: null,
             flow_handle_settings: {
                 on_success: '',
                 on_failure: constants.on_failure_options[0].value,
                 log_results: false
             },
+            embedding_id: null,
             cutoff: 0.6,
             top_k: 3,
             search_query: '',
@@ -23,7 +23,8 @@ const EmbeddingSearchNode = {
                 available_input_types: ['text', 'json'],
                 selectedTabIndex: 0,
                 tabs: ['Data', 'Advanced', 'Logs'],
-                logs: 'Logs will be here'
+                logs: '',
+                status: constants.node_statuses.idle,
             }
         }
     },
@@ -112,7 +113,14 @@ const EmbeddingSearchNode = {
         }
     },
     template: `
-    <div class="d-flex flex-column">
+    <div class="d-flex flex-column"
+        :class="{
+            'flow_validation_error': options.validation_errors?.length,
+            'flow_validation_error': options.status === window.constants.node_statuses.error,
+            'flow_node_running': options.status === window.constants.node_statuses.running,
+            'flow_node_success': options.status === window.constants.node_statuses.success,
+        }"
+    >
         <div class="d-flex align-items-center p-3">
             <div class="flex-grow-1">
                 <span class="font-h6 text-capitalize">

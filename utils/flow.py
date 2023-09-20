@@ -240,7 +240,10 @@ class FlowExecutor:
                 value = self._resolve_fields(params[param_name], prev_values)
                 params[param_name] = value
             except Exception as e:
+                log.error(type(e))
                 log.error(e)
+                from traceback import format_exc
+                log.info(format_exc())
                 error_msg = f"Failed to infer {param_name} for {params[param_name]} in {uid}(id: {task_id}) task"
                 log.error(error_msg)
                 self._errors[task_id] = error_msg

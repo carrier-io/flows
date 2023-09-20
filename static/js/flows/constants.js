@@ -1,4 +1,4 @@
-const constants = {
+window.constants = {
     variable_types: [
         {value: 'string', label: 'str'},
         {value: 'integer', label: 'int'},
@@ -10,7 +10,23 @@ const constants = {
     on_failure_options: [
         {value: 'stop', label: 'Stop Flow'},
         {value: 'ignore', label: 'Ignore'},
-    ]
+    ],
+
+    node_statuses: {
+        idle: 'idle',
+        running: 'running',
+        error: 'error',
+        success: 'success'
+    },
+
+    sio_events: {
+        flow_started: 'flows_flow_started',
+        node_finished: 'flows_node_finished',
+        flow_finished: 'flows_flow_finished',
+        evaluation_extracted: 'flows_evaluation_extracted',
+        evaluation_transformed: 'flows_evaluation_transformed',
+    }
+
 }
 
 const load_node_data = vue_component_instance => {

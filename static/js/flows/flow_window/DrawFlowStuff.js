@@ -1,10 +1,11 @@
 const nodeComponentMapping = {
-    start: StartNodeComponent,
+    start: StartNode,
     search: EmbeddingSearchNode,
     deduplicate: EmbeddingDeduplicateNode,
     evaluate: EvaluateNode,
     prompt: PromptNode,
-    pause: PauseNodeComponent,
+    pause: PauseNode,
+    end: EndNode,
 }
 
 const getVueComponent = uid => {

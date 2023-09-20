@@ -120,9 +120,18 @@
 }
 
 .flow_validation_error {
-    background-color: #ff00002b;
-    border: 2px solid #ff00004d;
-    border-radius: 3px;
+    background-color: #ff474780;
+    border-radius: 4px;
+}
+
+.flow_node_running {
+    background-color: #170d3133;
+    border-radius: 4px;
+}
+
+.flow_node_success {
+    background-color: rgb(43 212 141 / 50%);
+    border-radius: 4px;
 }
 
 #FlowsTable tr[data-index] {
