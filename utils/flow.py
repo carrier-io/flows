@@ -13,7 +13,7 @@ from jinja2 import Environment, DebugUndefined
 
 from tools import flow_tools
 
-from ..constants import SioEvent
+from ..constants import SioEvent, OnErrorActions
 
 
 class PreviousTaskFailed(Exception):
@@ -89,7 +89,6 @@ class FlowValidator:
 
 
 class FlowExecutor:
-    SKIP_CHAR = "skip"
     MAIN_OUTPUT_FILE = "main_output.json"
 
     @classmethod
@@ -126,7 +125,7 @@ class FlowExecutor:
             self._signal_task_failed()
 
     def _is_task_skippable(self, task_id):
-        return self.tasks.get(task_id, {}).get('on_failure') == self.SKIP_CHAR
+        return self.tasks.get(task_id, {}).get('on_failure') == OnErrorActions.ignore
 
     def _signal_task_failed(self):
         with self._stop_flow_lock:

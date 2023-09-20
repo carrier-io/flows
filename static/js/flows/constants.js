@@ -8,8 +8,8 @@ const constants = {
     ],
 
     on_failure_options: [
-        {value: 0, label: 'Stop Flow'},
-        {value: 1, label: 'Ignore'},
+        {value: 'stop', label: 'Stop Flow'},
+        {value: 'ignore', label: 'Ignore'},
     ]
 }
 
