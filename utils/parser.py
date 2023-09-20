@@ -1,4 +1,5 @@
 from pylon.core.tools import log
+from tools import flow_tools
 
 
 class InvalidTaskNames(Exception):
@@ -8,10 +9,9 @@ class InvalidTaskNames(Exception):
 
 
 class FlowParser:
-    def __init__(self, front_config):
-        self.front_config: dict = front_config
+    def __init__(self, front_config: dict):
+        # self.front_config: dict = front_config
         self.back_tasks = {}
-        self.back_config = {'tasks': self.back_tasks}
         self.front_tasks: dict = front_config['drawflow']['Home']['data']
 
     def _find_parents(self, task_id):
@@ -48,7 +48,6 @@ class FlowParser:
             data['step'] = len(parents) + 1
             data['parent_list'] = parents
             data['direct_parents'] = direct_parents
-    
 
     def _populate_task_props(self):
         for task_id, data in self.back_tasks.items():
@@ -71,10 +70,8 @@ class FlowParser:
                 name = self.front_tasks[task_id]['name']
                 data['name'] = names_mapping.get(name)
 
-
     def _map_rpc_functions(self):
         # mapping = tasklib.get_tasks_to_rpc_mappings()
-        from tools import flow_tools
         mapping = flow_tools._registry
         invalid_names = []
         for task_id, data in self.front_tasks.items():
@@ -89,8 +86,8 @@ class FlowParser:
         if invalid_names:
             raise InvalidTaskNames("Invalid task names found", invalid_names)
 
-    def parse(self):
+    def parse(self) -> dict:
         self._map_rpc_functions()
         self._populate_task_props()
         self._find_parent_lists()
-        return self.back_config
+        return self.back_tasks

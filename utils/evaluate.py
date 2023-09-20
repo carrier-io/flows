@@ -2,8 +2,10 @@ import json
 from traceback import format_exc
 from typing import List, Dict
 from abc import ABCMeta, abstractmethod
-from jinja2 import Environment
+from jinja2 import Environment, TemplateSyntaxError, UndefinedError
 from pylon.core.tools import log
+
+from ..constants import SioEvent
 
 
 class TransformationError(Exception):
@@ -29,21 +31,21 @@ class EvaluateTemplate(metaclass=MyABC):
         self.output_format = output_format
 
     def extract(self):
+        environment = Environment()
+
+        def json_loads_filter(json_string: str, do_replace: bool = False):
+            import json
+            if do_replace:
+                json_string = json_string.replace("'", "\"")
+            return json.loads(json_string)
+
+        environment.filters['json_loads'] = json_loads_filter
         try:
-            environment = Environment()
-
-            def json_loads_filter(json_string: str, do_replace: bool = False):
-                import json
-                if do_replace:
-                    json_string = json_string.replace("'", "\"")
-                return json.loads(json_string)
-
-            environment.filters['json_loads'] = json_loads_filter
-
             template = environment.from_string(self.query)
             result = template.render()
-        except:
+        except (TemplateSyntaxError, UndefinedError):
             log.critical(format_exc())
+            log.info('Template str: %s', self.query)
             raise Exception("Invalid jinja template in context")
         return result
 
@@ -64,10 +66,10 @@ class EvaluateTemplate(metaclass=MyABC):
     def evaluate(self):
         # extracting
         value: List[Dict] = self.extract()
-        self.context.sio.emit("evaluation_extracted", value)
+        self.context.sio.emit(SioEvent.evaluation_extracted, value)
         # transforming result
         result = self.handle_transform(value)
-        self.context.sio.emit("evaluation_transformed", result)
+        self.context.sio.emit(SioEvent.evaluation_transformed, result)
         return result
 
 

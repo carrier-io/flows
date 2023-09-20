@@ -42,15 +42,14 @@ class ProjectAPI(api_tools.APIModeHandler):
             else:
                 flow_data = session.query(Flow).with_entities(Flow.flow_data).filter(Flow.id == flow_id).first()
                 if not flow_data:
-                    return {'error': 'Flow data not found'}, 404
+                    return {'error': 'Flow data not found'}, 400
                 flow_data = flow_data[0]
 
         run_async = request.json.get('async', False)
 
         log.info('api got flow_data %s', flow_data)
         try:
-            parser = FlowParser(flow_data)
-            backend_config = parser.parse()
+            parsed_tasks_config = FlowParser(flow_data).parse()
         except InvalidTaskNames as e:
             return {
                 "ok": False,
@@ -64,23 +63,38 @@ class ProjectAPI(api_tools.APIModeHandler):
         except Exception as e:
             return {"ok": False, "error": str(e), "type": "parse_error"}, 400
 
-        backend_config['project_id'] = project_id
-        backend_config['run_id'] = str(uuid.uuid4())
+        # backend_config['project_id'] = project_id
+        # backend_config['run_id'] = str(uuid.uuid4())
 
-        validator = FlowValidator(self.module, backend_config)
-        errors = validator.validate()
-        if errors:
-            response = {"ok": False, "error": errors, "type": "validation_error"}
+        log.info('parsed_tasks_config %s', parsed_tasks_config)
+        validator = FlowValidator(self.module, tasks=parsed_tasks_config, project_id=project_id)
+        validator.validate()
+        if not validator.ok:
+            response = {"ok": False, "error": validator.errors, "type": "validation_error"}
             return response, 400
 
-        backend_config['variables'] = validator.variables
+        # backend_config['variables'] = validator.variables
 
-        result = {'ok': True, 'run_id': backend_config['run_id'], 'config': backend_config}
+        result = {'ok': True, 'run_id': validator.run_id}
+        if False:
+            result['tasks'] = validator.tasks
+            result['validated_data'] = {}
+            pds = []
+            for k, v in validator.validated_data.items():
+                if isinstance(v, (str, dict, int, bool, list)):
+                    result['validated_data'][k] = v
+                elif getattr(v, 'dict'):
+                    pds.append(str(k))
+                    result['validated_data'][k] = v.dict()
+                else:
+                    result['validated_data'][str(k)] = str(v)
+            result['pds'] = pds
+            return result, 200
         if run_async:
-            self.module.context.event_manager.fire_event('flows_run_flow', backend_config)
+            self.module.context.event_manager.fire_event('flows_run_flow', validator.event_payload)
         else:
-            log.info('FlowExecutor %s', backend_config)
-            flow = FlowExecutor(self.module, backend_config)
+            log.info('FlowExecutor %s', validator.validated_data)
+            flow = FlowExecutor.from_validator(validator)
             log.info('Running flow')
             ok, run_output = flow.run()
             result['ok'] = bool(ok)

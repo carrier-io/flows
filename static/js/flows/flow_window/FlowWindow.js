@@ -37,8 +37,8 @@ const FlowWindow = {
             })
             this.is_loading = false
             if (resp.ok) {
-                const {config} = await resp.json()
-                showNotify('SUCCESS', `Flow finished ${config.run_id}`)
+                const {run_id} = await resp.json()
+                showNotify('SUCCESS', `Flow finished ${run_id}`)
             } else {
                 showNotify('ERROR', 'Flow run error')
                 this.handleValidationErrors(await resp.json())
@@ -76,6 +76,11 @@ const FlowWindow = {
                 if (data.options) { data.options.validation_errors = [] }
             })
         },
+        handleSioEvents() {
+            window.socket.on("flows_node_finished", data => {
+                console.log('sio event', 'flows_node_finished', data)
+            })
+        }
     },
     computed: {},
     template: `

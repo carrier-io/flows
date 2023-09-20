@@ -32,16 +32,16 @@ def _make_request(method: str, jwt_token: str, url: str):
     inputs=0,
     weight=100
 )
-def start(flow_context: dict, clean_data: dict):
+def start(flow_context: dict, clean_data: StartPayload) -> dict:
     result = {
-        variable['name']: variable['value']
-        for variable in clean_data['variables']
+        variable.name: variable.value
+        for variable in clean_data.variables
     }
     return {"ok": True, 'result': result}
 
 
 @flow_tools.validator(flow_uid='start')
-def start_validate(**kwargs):
+def start_validate(**kwargs) -> StartPayload:
     return StartPayload.validate(kwargs)
 
 
@@ -52,9 +52,10 @@ def start_validate(**kwargs):
     icon_url='/flows/static/icons/evaluate.svg',
     weight=90
 )
-def evaluate(flow_context: dict, clean_data: dict):
-    output_type = clean_data.get('output_type', "string")
-    eval_input = clean_data['eval_input']
+def evaluate(flow_context: dict, clean_data: EvaluatePayload) -> dict:
+    log.info('evaluate clean data: %s', clean_data)
+    output_type = clean_data.output_type
+    eval_input = clean_data.eval_input
     try:
         module = flow_context.get("module")
         evaluate_class = get_evaluator(output_type)
@@ -67,7 +68,7 @@ def evaluate(flow_context: dict, clean_data: dict):
 
 
 @flow_tools.validator(flow_uid='evaluate')
-def evaluate_validate(**kwargs):
+def evaluate_validate(**kwargs) -> EvaluatePayload:
     return EvaluatePayload.validate(kwargs)
 
 
@@ -79,11 +80,11 @@ def evaluate_validate(**kwargs):
     outputs=0,
     weight=5,
 )
-def end(flow_context: dict, clean_data: dict):
-    eval_input = clean_data['eval_input']
+def end(flow_context: dict, clean_data: EndPayload):
+    eval_input = clean_data.eval_input
     try:
         if eval_input:
-            return evaluate(flow_context, clean_data)
+            return evaluate(flow_context, EvaluatePayload.parse_obj(clean_data.dict()))
 
         config = flow_context.get('task_config')
         parent = config['direct_parents'][0]
@@ -96,7 +97,7 @@ def end(flow_context: dict, clean_data: dict):
 
 
 @flow_tools.validator(flow_uid='end')
-def end_validate(**kwargs):
+def end_validate(**kwargs) -> EndPayload:
     return EndPayload.validate(kwargs)
 
 
@@ -107,9 +108,9 @@ def end_validate(**kwargs):
     icon_url='/flows/static/icons/pause.svg',
     weight=89
 )
-def pause(flow_context: dict, clean_data: dict):
+def pause(flow_context: dict, clean_data: PausePayload):
     try:
-        sleep_time = clean_data['wait_time_ms'] / 1000
+        sleep_time = clean_data.wait_time_ms / 1000
         sleep(sleep_time)
     except Exception as e:
         log.error(e)
@@ -118,7 +119,7 @@ def pause(flow_context: dict, clean_data: dict):
 
 
 @flow_tools.validator(flow_uid='pause')
-def pause_validate(**kwargs):
+def pause_validate(**kwargs) -> PausePayload:
     return PausePayload.validate(kwargs)
 
 
@@ -141,5 +142,6 @@ def tst(arg1='DEFAULT', **kwargs):
 
 @flow_tools.validator(flow_uid='test')
 def tst_validator(**kwargs) -> Any:
+    kwargs['imagine'] = 'wow'
     log.info(f'Executing tst_validator with {kwargs=}')
     return kwargs

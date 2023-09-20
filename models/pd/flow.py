@@ -1,27 +1,26 @@
 import json
 
-from pydantic import BaseModel, ValidationError, root_validator, validator
+from pydantic import BaseModel, validator
 from typing import List, Optional
 
 
-class WorkflowModel(BaseModel):
-    name: str
-    flow_data: dict = {}
-    display_data: dict = {}
-
-
-class WorkflowUpdateModel(WorkflowModel):
-    id: int
+# class WorkflowModel(BaseModel):
+#     name: str
+#     flow_data: dict = {}
+#     display_data: dict = {}
+#
+#
+# class WorkflowUpdateModel(WorkflowModel):
+#     id: int
 
 
 class EvaluatePayload(BaseModel):
     eval_input: str 
-    output_format: Optional[str] = "string"
+    output_type: Optional[str] = "string"
 
 
-class EndPayload(BaseModel):
+class EndPayload(EvaluatePayload):
     eval_input: Optional[str] = None 
-    output_format: Optional[str] = "string"
 
 
 class PausePayload(BaseModel):
@@ -31,14 +30,14 @@ class PausePayload(BaseModel):
 class Variable(BaseModel):
     name: str
     type: str
-    value: str
+    value: str | int | float | bool | dict
 
     @validator('value')
     def validate_value(cls, value, values):
         type_validators = {
             'string': cls.validate_string,
-            'float': cls.validate_float,
             'integer': cls.validate_integer,
+            'float': cls.validate_float,
             'boolean': cls.validate_bool,
             'json': cls.validate_json,
         }
@@ -75,8 +74,10 @@ class Variable(BaseModel):
             raise ValueError(f"Invalid boolean value: {value}")
 
     @classmethod
-    def validate_json(cls, value: str):
-        return json.loads(value)
+    def validate_json(cls, value: str | dict) -> dict:
+        if isinstance(value, str):
+            return json.loads(value)
+        return value
         
 
 class StartPayload(BaseModel):
