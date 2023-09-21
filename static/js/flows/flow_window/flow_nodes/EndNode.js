@@ -115,8 +115,7 @@ const EndNode = {
                 
                 <div class="mt-2 flex-grow-1 d-flex flex-column">
                     <span class="font-h5 font-bold">Result</span>
-<!--                    <pre class="form-control flex-grow-1 overflow-auto">{{ options.result }}</pre>-->
-                    <pre class="form-control flex-grow-1 overflow-auto" v-html="options.result"></pre>
+                    <pre class="form-control flex-grow-1 overflow-auto">{{ options.result }}</pre>
                 </div>
             </div>
         </div>

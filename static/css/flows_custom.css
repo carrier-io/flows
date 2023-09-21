@@ -1,13 +1,3 @@
-/*.flowly_canvas {*/
-/*    background-color: var(--gray100);*/
-/*    position: absolute;*/
-/*    width: calc(100% - 40px);*/
-/*    height: calc(100% - 96px);*/
-/*    !*top: 71px;*!*/
-/*    !*left: 361px;*!*/
-/*    z-index: 0;*/
-/*    overflow: auto;*/
-/*}*/
 .flow_canvas {
     border-left: 1px solid var(--gray200, #EAEDEF);
     background: var(--gray100, #F6F9FC);
@@ -139,4 +129,19 @@
 
 #FlowsTable tr[data-index] {
     cursor: pointer;
+}
+
+.tmp-helper {
+    position: absolute;
+    top: -10px;
+    display: none;
+}
+
+.side-window {
+    max-width: 300px;
+    min-width: 300px;
+}
+
+#container-window {
+    min-height: calc(100% - 60px - 32px)
 }

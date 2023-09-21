@@ -169,10 +169,13 @@ const FlowWindow = {
     template: `
 <div class="card flex-grow-1">
     <pre class="tmp-helper">FlowWindow.js</pre>
-    <div class="d-flex card-header">
+    <div class="d-flex card-header" style="border-bottom: 1px solid var(--gray200);">
         <div class="flex-grow-1 font-h4 font-bold">
-            {{ selectedFlow?.name }}
-            <p class="font-h6">id: {{ selectedFlow?.id }}</p>
+            <span data-toggle="tooltip" data-placement="top" 
+                :data-original-title="'id: ' + selectedFlow?.id"
+            >
+                {{ selectedFlow?.name }}
+            </span>
         </div>
         <div>
             <button class="btn btn-secondary mr-2"
@@ -185,7 +188,7 @@ const FlowWindow = {
             >Save & Run</button>
         </div>
     </div>
-    <div class="card-body px-0 pb-0">
+    <div class="card-body p-0">
         <FlowNodesContainer :flow_blocks="flow_blocks"></FlowNodesContainer>
         <DrawFlowStuff 
             :flow_blocks="flow_blocks" 

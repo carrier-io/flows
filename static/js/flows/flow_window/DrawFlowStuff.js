@@ -158,7 +158,7 @@ const DrawFlowStuff = {
         @drop.prevent="handleDrop" 
         @dragover.prevent="dropAreaStyle = {border: '1px dashed var(--basic)'}"
     >
-        <div class="loadingOverlay" v-show="loadingOverlayVisible ">
+        <div class="loadingOverlay" v-show="loadingOverlayVisible">
             <span class="font-h1">Loading</span>
         </div>
     </div>
