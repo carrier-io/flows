@@ -28,7 +28,7 @@ def _make_request(method: str, jwt_token: str, url: str):
     uid='start',
     display_name='Start',
     tooltip='Start node',
-    icon_fa='fa fa-terminal fa-xl',
+    icon_fa='fa fa-terminal fa-md',
     inputs=0,
     weight=100
 )

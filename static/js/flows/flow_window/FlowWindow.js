@@ -111,12 +111,18 @@ const FlowWindow = {
             return run_id === this.tracked_run_ids[this.selectedFlow.id]
         },
         handleSioNodeFinished(data) {
-            console.log('sio event', 'flows_node_finished', data)
-            const {ok, result, run_id, task_id: node_id} = data
+            // todo: handle this on backend:
+            if (typeof data === 'string') {
+                data = JSON.parse(data)
+            }
+            // console.log('sio event', 'flows_node_finished')
+            // console.log(typeof data, data)
+            const {ok, result, run_id, task_id: node_id, error} = data
+            // console.log({ok, result, run_id, node_id})
             if (this.checkEventRunId(run_id)) {
                 const data_ref = this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data[node_id].data
                 if (data_ref.options) {
-                    data_ref.options.logs = result
+                    data_ref.options.logs = ok ? result : error
                     data_ref.options.status = ok ? constants.node_statuses.success : constants.node_statuses.error
                 }
             } else {
@@ -137,20 +143,22 @@ const FlowWindow = {
             }
         },
         handleSioFlowFinished(data) {
-            const {ok, result, run_id} = data
+            const {ok, result, run_id, error} = data
             if (this.checkEventRunId(run_id)) {
-                this.setNodesFinished()
+                // this.setNodesFinished()
+                const [_, end_node] = Object.entries(
+                    this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data
+                ).find(([node_id, {name}]) => {
+                    return name === 'end'
+                })
                 if (ok) {
-                    const [_, end_node] = Object.entries(
-                        this.$refs.DrawFlowStuff.editor.drawflow.drawflow['Home'].data
-                    ).find(([node_id, {name}]) => {
-                        return name === 'end'
-                    })
                     end_node.data.options.status = constants.node_statuses.success
                     end_node.data.options.result = result
                     showNotify('SUCCESS', 'Flow finished')
                 } else {
-                    this.handleValidationErrors({errors: data.error})
+                    // this.handleValidationErrors({errors: data.error})
+                    end_node.data.options.status = constants.node_statuses.error
+                    end_node.data.options.result = error
                     showNotify('WARNING', 'Flow had some errors')
                 }
                 console.log('flow finished', data)
