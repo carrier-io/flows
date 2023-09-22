@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 from queue import Empty
 from threading import Thread, Lock
+from time import sleep
 from copy import deepcopy
 
 from typing import Dict, List, Optional, Any
@@ -92,13 +93,15 @@ class FlowExecutor:
     MAIN_OUTPUT_FILE = "main_output.json"
 
     @classmethod
-    def from_validator(cls, validator: FlowValidator):
+    def from_validator(cls, flow_id, validator: FlowValidator, sync):
         return cls(
             module=validator.module,
+            flow_id = flow_id,
+            sync=sync,
             **validator.event_payload
         )
 
-    def __init__(self, module, validated_data: dict, project_id: int, tasks: dict, run_id: str, variables: dict = None):
+    def __init__(self, module, flow_id: int, sync: bool, validated_data: dict, project_id: int, tasks: dict, run_id: str, variables: dict = None):
         self.module = module
         self.context = module.context
         self.validated_data = validated_data
@@ -106,6 +109,8 @@ class FlowExecutor:
         self.variables = variables or {}
         self.tasks = tasks
         self.run_id = run_id
+        self.flow_id = flow_id
+        self.sync = sync
         self._errors = {}
 
         # creating run_id folder
@@ -206,7 +211,9 @@ class FlowExecutor:
             'outputs': deepcopy(prev_values),
             'module': self.module,
             'task_config': task_config,
-            'tasks': self.tasks
+            'tasks': self.tasks,
+            'run_id': self.run_id,
+            "flow_id": self.flow_id,
         }
 
     def _call_run_task(self, uid: str, params):
@@ -247,12 +254,12 @@ class FlowExecutor:
                 error_msg = f"Failed to infer {param_name} for {params[param_name]} in {uid}(id: {task_id}) task"
                 log.error(error_msg)
                 self._errors[task_id] = error_msg
-                self.context.event_manager.fire_event(SioEvent.node_finished, json.dumps({
+                payload = {
                     "ok": False,
                     "error": error_msg,
                     "task_id": task_id,
-                    "run_id": self.run_id
-                }))
+                }
+                self.emit_events(SioEvent.node_finished, payload, stringify=True)
                 return self.consider_stopping_flow(task_id, task_health=False)
 
         # log.info('clean_data.__class__: %s', clean_data.__class__)
@@ -272,26 +279,38 @@ class FlowExecutor:
         result['name'] = uid
         result["rpc_name"] = rpc_name
         result["task_id"] = task_id
-        result["run_id"] = self.run_id
+
+        # logging output of the current step
+        self._write_to_file(result, output_path)
 
         if not result['ok']:
             self._errors[task_id] = result.get('error')
 
-        if (meta.get('log_results') and result['ok']) or not result['ok']:
-            self.context.event_manager.fire_event(SioEvent.node_finished, result)
-
-        # logging output of the current step
-        self._write_to_file(result, output_path)
+        # emit result
+        if not meta.get('log_results') and result['ok']:
+            result.pop('result', None)
+        self.emit_events(SioEvent.node_finished, result)
 
         # stop flow if current task failed and it is not skippable
         self.consider_stopping_flow(task_id, result['ok'])
 
         log.info(f"Completed: {task_id}")
 
+    def emit_events(self, topic, payload: dict, *, stringify=False):
+        if self.sync:
+            return
+        sleep(0.01)
+        payload['project_id'] = self.project_id
+        payload['flow_id'] = self.flow_id
+        payload['run_id'] = self.run_id
+        if stringify:
+            payload = json.dumps(payload)
+        self.context.sio.emit(topic, payload)
+
     def run(self):
         #### MAIN
         log.info("FLOW STARTED...")
-        self.context.sio.emit(SioEvent.flow_started, {"run_id": self.run_id})
+        self.emit_events(SioEvent.flow_started, {"run_id": self.run_id})
 
         steps_data = self.generate_steps_conf(self.tasks)
         for step, task_ids in steps_data.items():
@@ -315,12 +334,6 @@ class FlowExecutor:
             log.info(f"Step {step} finished")
         log.info(f"Flow execution DONE: {self.run_id}")
 
-        # remove all files
-        # current_dir = os.getcwd()
-        # log.info(current_dir)
-        # log.info(os.listdir(current_dir))
-        # for f in os.listdir(current_dir):
-        #     os.remove(os.path.join(current_dir, f))
         if self._errors:
             return False, self._errors
 

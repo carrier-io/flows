@@ -91,10 +91,12 @@ class ProjectAPI(api_tools.APIModeHandler):
             result['pds'] = pds
             return result, 200
         if run_async:
-            self.module.context.event_manager.fire_event('flows_run_flow', validator.event_payload)
+            payload = {'flow_id': flow_id, 'sync': False, **validator.event_payload}
+            self.module.context.event_manager.fire_event('flows_run_flow', payload)
         else:
+
             log.info('FlowExecutor %s', validator.validated_data)
-            flow = FlowExecutor.from_validator(validator)
+            flow = FlowExecutor.from_validator(flow_id, validator, sync=True)
             log.info('Running flow')
             ok, run_output = flow.run()
             result['ok'] = bool(ok)

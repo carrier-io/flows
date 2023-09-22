@@ -59,7 +59,7 @@ def evaluate(flow_context: dict, clean_data: EvaluatePayload) -> dict:
     try:
         module = flow_context.get("module")
         evaluate_class = get_evaluator(output_type)
-        evaluator: EvaluateTemplate = evaluate_class(module, eval_input, output_type)
+        evaluator: EvaluateTemplate = evaluate_class(module, flow_context, eval_input, output_type)
         result = evaluator.evaluate()
     except Exception as e:
         log.error(e)
