@@ -6,7 +6,7 @@ from ...models.flow import Flow
 
 from pylon.core.tools import log
 
-from ...utils.flow import FlowValidator, FlowExecutor
+from ...utils.flow import FlowValidator, FlowExecutor, change_start_node_variables
 from ...utils.parser import FlowParser, InvalidTaskNames
 
 
@@ -67,6 +67,9 @@ class ProjectAPI(api_tools.APIModeHandler):
         # backend_config['run_id'] = str(uuid.uuid4())
 
         log.info('parsed_tasks_config %s', parsed_tasks_config)
+        variables = request.json.get('variables')
+        if variables:
+            parsed_tasks_config = change_start_node_variables(parsed_tasks_config, variables)
         validator = FlowValidator(self.module, tasks=parsed_tasks_config, project_id=project_id)
         validator.validate()
         if not validator.ok:
@@ -91,10 +94,11 @@ class ProjectAPI(api_tools.APIModeHandler):
             result['pds'] = pds
             return result, 200
         if run_async:
-            self.module.context.event_manager.fire_event('flows_run_flow', validator.event_payload)
+            payload = {'flow_id': flow_id, 'sync': False, **validator.event_payload}
+            self.module.context.event_manager.fire_event('flows_run_flow', payload)
         else:
             log.info('FlowExecutor %s', validator.validated_data)
-            flow = FlowExecutor.from_validator(validator)
+            flow = FlowExecutor.from_validator(flow_id, validator, sync=True)
             log.info('Running flow')
             ok, run_output = flow.run()
             result['ok'] = bool(ok)

@@ -25,8 +25,9 @@ class MyABC(ABCMeta):
 
 
 class EvaluateTemplate(metaclass=MyABC):
-    def __init__(self, module, query: str, output_format: str):
+    def __init__(self, module, flow_context, query: str, output_format: str):
         self.context = module.context
+        self.flow_context = flow_context
         self.query = query
         self.output_format = output_format
 
@@ -62,14 +63,24 @@ class EvaluateTemplate(metaclass=MyABC):
     def transform(self, value):
         pass
 
+    def emit_event(self, topic, result):
+        payload = {
+            "ok": True,
+            "result": result,
+            "run_id": self.flow_context['run_id'],
+            "project_id": self.flow_context['project_id'],
+            "flow_id": self.flow_context['flow_id']
+        }
+        self.context.sio.emit(topic, payload)
+        
     # template method
     def evaluate(self):
         # extracting
         value: List[Dict] = self.extract()
-        self.context.sio.emit(SioEvent.evaluation_extracted, value)
+        self.emit_event(SioEvent.evaluation_extracted, value)
         # transforming result
         result = self.handle_transform(value)
-        self.context.sio.emit(SioEvent.evaluation_transformed, result)
+        self.emit_event(SioEvent.evaluation_transformed, result)
         return result
 
 
