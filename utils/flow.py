@@ -352,7 +352,7 @@ def change_start_node_variables(config: dict, new_variables: List[Dict]):
             variables: list = task_config['params']['variables']
             for variable in variables:
                 var_config = new_vars_map.pop(variable['name'], None)
-                if var_config:
+                if not var_config:
                     continue
 
                 variable['value'] = var_config['value']
@@ -364,7 +364,5 @@ def change_start_node_variables(config: dict, new_variables: List[Dict]):
                     "type": var_config['type'],
                     "value": var_config['value']
                 })
-
     return config
-            
 
