@@ -339,3 +339,32 @@ class FlowExecutor:
 
         result = self._read_results()
         return True, result.get('flowy_end')
+
+
+
+def change_start_node_variables(config: dict, new_variables: List[Dict]):
+    new_vars_map = {
+        variable['name']: {'value': variable['value'], "type": variable['type']} 
+        for variable in new_variables
+    }
+    for task_config in config.values():
+        if task_config['name'] == "flowy_start":
+            variables: list = task_config['params']['variables']
+            for variable in variables:
+                var_config = new_vars_map.pop(variable['name'], None)
+                if var_config:
+                    continue
+
+                variable['value'] = var_config['value']
+                variable['type'] = var_config['type']
+            
+            for name, var_config in new_vars_map.items():
+                variables.append({
+                    "name": name,
+                    "type": var_config['type'],
+                    "value": var_config['value']
+                })
+
+    return config
+            
+
