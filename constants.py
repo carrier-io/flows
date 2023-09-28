@@ -19,3 +19,9 @@ class SioEvent(StrEnum):
 class OnErrorActions(StrEnum):
     stop = 'stop'
     ignore = 'ignore'
+
+
+class FlowStatuses(StrEnum):
+    running = 'running'
+    finished = 'finished'
+    error = 'error'

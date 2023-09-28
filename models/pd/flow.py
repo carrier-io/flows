@@ -4,16 +4,6 @@ from pydantic import BaseModel, validator
 from typing import List, Optional
 
 
-# class WorkflowModel(BaseModel):
-#     name: str
-#     flow_data: dict = {}
-#     display_data: dict = {}
-#
-#
-# class WorkflowUpdateModel(WorkflowModel):
-#     id: int
-
-
 class EvaluatePayload(BaseModel):
     eval_input: str 
     output_type: Optional[str] = "string"

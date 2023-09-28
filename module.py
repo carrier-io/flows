@@ -33,7 +33,7 @@ class Module(module.ModuleModel):
         log.info('Initializing Flows module')
 
         from .init_db import init_db
-        init_db()
+        init_db(self.context.rpc_manager)
 
         self.descriptor.init_all()
 
