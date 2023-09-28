@@ -1,0 +1,48 @@
+[
+   {
+      "uid": "start",
+      "name": "Start",
+      "tooltip": "Start block",
+      "icon_fa": "fa fa-terminal fa-xl",
+      "inputs": 0,
+      "outputs": 1
+   },
+   {
+      "uid": "search",
+      "name": "Embedding Search",
+      "tooltip": "Search with embeddings",
+      "icon_url": "/flows/static/icons/embed_search.svg"
+   },
+   {
+      "uid": "deduplicate",
+      "name": "Deduplicate",
+      "tooltip": "Deduplicate embeddings",
+      "icon_url": "/flows/static/icons/embed_deduplicate.svg"
+   },
+   {
+      "uid": "evaluate",
+      "name": "evaluate",
+      "tooltip": "Format output",
+      "icon_url": "/flows/static/icons/evaluate.svg"
+   },
+   {
+      "uid": "pause",
+      "name": "pause",
+      "tooltip": "Delay",
+      "icon_url": "/flows/static/icons/pause.svg"
+   },
+   {
+      "uid": "prompt",
+      "name": "prompt",
+      "tooltip": "Prompt predict",
+      "icon_url": "/flows/static/icons/prompt.svg"
+   },
+   {
+      "uid": "stop",
+      "name": "stop",
+      "tooltip": "Terminate",
+      "icon_url": "/flows/static/icons/stop.svg",
+      "inputs": 1,
+      "outputs": 0
+   }
+]

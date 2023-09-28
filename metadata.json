@@ -1,0 +1,6 @@
+{
+  "name": "Pylon Flow plugin",
+  "version": "0.1",
+  "depends_on": ["projects", "theme"],
+  "init_after": []
+}
