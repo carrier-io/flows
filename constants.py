@@ -25,3 +25,11 @@ class FlowStatuses(StrEnum):
     running = 'running'
     finished = 'finished'
     error = 'error'
+    aborted = 'aborted'
+
+
+class NodeStatuses(StrEnum):
+    pending = 'pending'
+    running = 'running'
+    finished = 'finished'
+    error = 'error'

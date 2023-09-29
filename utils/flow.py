@@ -3,6 +3,7 @@ import os
 import json
 import uuid
 from concurrent.futures import ThreadPoolExecutor, wait
+from datetime import datetime
 from pathlib import Path
 from queue import Empty
 from threading import Thread, Lock
@@ -16,13 +17,14 @@ from jinja2 import Environment, DebugUndefined
 
 from tools import flow_tools, db
 
-from ..constants import SioEvent, OnErrorActions
+from ..constants import SioEvent, OnErrorActions, FlowStatuses, NodeStatuses
 from ..models.flow import Flow
 from ..models.flow_run import FlowRun
+from ..models.pd.flow_run import NodeStatus
 
 
 class PreviousTaskFailed(Exception):
-    "Raised when previous task is faield"
+    """Raised when previous task is failed"""
 
 
 OUTPUT_FOLDER = Path(__file__).parent.parent.joinpath('tmp')
@@ -234,7 +236,6 @@ class FlowExecutor:
             result = dict(obj)
         return result
 
-
     def _execute_task(self, task_id: int) -> None:
         # log.info(f'Original Thread started: {os.getpid()} -> {task_id}')
         meta = self.tasks[task_id]
@@ -318,11 +319,6 @@ class FlowExecutor:
                 Flow.id == self.flow_id
             ).first()[0]
 
-            # log.info('flow_data %s', flow_data)
-            # log.info('self.tasks %s', self.tasks)
-            # log.info('self.validated_data %s', self.validated_data)
-            # log.info('self.variables %s', self.variables)
-
             flow_run = FlowRun(
                 flow_id=self.flow_id,
                 uid=self.run_id,
@@ -335,16 +331,43 @@ class FlowExecutor:
             session.add(flow_run)
             session.commit()
 
-    def update_db_flow_run(self):
+    def update_db_flow_run(self, update_data: dict):
         with self._update_db_lock:
             with db.with_project_schema_session(self.project_id) as session:
                 try:
-                    flow_run = session.query(FlowRun).get(flow_run_id)
-
-                    if flow_run:
-                        flow_run.status = new_status
-                        session.commit()
+                    # flow_run = session.query(FlowRun).get(self.run_id)
+                    #
+                    # if flow_run:
+                    #     flow_run.status = new_status
+                    session.query(FlowRun).filter(
+                        FlowRun.uid == self.run_id
+                    ).update(update_data)
+                    session.commit()
                 except Exception as e:
+                    log.critical(format_exc())
+                    session.rollback()
+
+    def update_db_step_status(self, node_id: int | str, update_data: NodeStatus) -> None:
+        with self._update_db_lock:
+            with db.with_project_schema_session(self.project_id) as session:
+                try:
+                    step_statuses = session.query(FlowRun).with_entities(
+                        FlowRun.step_status
+                    ).filter(
+                        FlowRun.uid == self.run_id
+                    ).first()[0]
+
+                    status = NodeStatus.parse_obj(step_statuses.get(node_id, {}))
+                    status.update(update_data)
+                    step_statuses[node_id] = status.orm_dict()
+
+                    session.query(FlowRun).filter(
+                        FlowRun.uid == self.run_id
+                    ).update({'step_status': step_statuses})
+
+                    session.commit()
+                except Exception as e:
+                    log.critical(format_exc())
                     session.rollback()
 
     def on_flow_started(self) -> None:
@@ -358,22 +381,42 @@ class FlowExecutor:
 
     def on_flow_finished(self) -> None:
         log.info(f"Flow execution DONE: {self.run_id}")
+        status = FlowStatuses.error if self._errors else FlowStatuses.finished
+        self.update_db_flow_run({
+            'finished_at': datetime.utcnow(),
+            'status': status
+        })
 
     def on_flow_aborted(self) -> None:
         log.info(f"FLOW ABORTED {self.run_id}")
+        self.update_db_flow_run({
+            'finished_at': datetime.utcnow(),
+            'status': FlowStatuses.aborted
+        })
 
-    def on_step_started(self, step) -> None:
-        log.info(f"Step {step} started")
+    def on_step_group_started(self, step_group: int) -> None:
+        log.info(f"Step {step_group} started")
 
-    def on_step_finished(self, step) -> None:
-        log.info(f"Step {step} finished")
+    def on_step_group_finished(self, step_group: int) -> None:
+        log.info(f"Step {step_group} finished")
 
-    def on_node_started(self, node_id: int, meta: dict, params: dict):
+    def on_node_started(self, node_id: int, meta: dict, params: dict) -> None:
         log.info(f'Thread started: {os.getpid()} -> {node_id}')
         # log.info(f'Node meta: {meta} params: {params}')
+        status = NodeStatus(
+            status=NodeStatuses.running,
+            started_at=datetime.utcnow()
+        )
+        self.update_db_step_status(node_id, status)
 
     def on_node_error(self, node_id: int, meta: dict, error_msg: str) -> None:
         self._errors[node_id] = error_msg
+        status = NodeStatus(
+            status=NodeStatuses.error,
+            finished_at=datetime.utcnow(),
+            message=error_msg
+        )
+        self.update_db_step_status(node_id, status)
         payload = {
             "ok": False,
             "error": error_msg,
@@ -383,11 +426,16 @@ class FlowExecutor:
         self.emit_events(SioEvent.node_finished, payload)
 
     def on_node_success(self, node_id: int, meta: dict, result: dict) -> None:
+        status = NodeStatus(
+            status=NodeStatuses.finished,
+            finished_at=datetime.utcnow(),
+        )
+        self.update_db_step_status(node_id, status)
         if not meta.get('log_results') and result['ok']:
             result.pop('result', None)
         self.emit_events(SioEvent.node_finished, result)
 
-    def execute_tasks(self, task_ids: list):
+    def execute_tasks(self, task_ids: list) -> None:
         with ThreadPoolExecutor(max_workers=self.MAX_THREADS) as executor:
             futures = [
                 executor.submit(FlowExecutor._execute_task, self, task_id)
@@ -402,28 +450,17 @@ class FlowExecutor:
         self.on_flow_started()
 
         steps_data = self.generate_steps_conf(self.tasks)
-        for step, task_ids in steps_data.items():
-            self.on_step_started(step)
+        for step_group, task_ids in steps_data.items():
+            self.on_step_group_started(step_group)
 
             # stop when task failed                
             if self._stop_flow:
                 self.on_flow_aborted()
                 break
 
-            # threads = []
-            # for task_id in task_ids:
-            #     p = Thread(target=FlowExecutor._execute_task, args=(self, task_id))
-            #     p.start()
-            #     threads.append(p)
-            #
-            # for thread in threads:
-            #     thread.join()
-
-            # threads.clear()
-
             self.execute_tasks(task_ids)
 
-            self.on_step_finished(step)
+            self.on_step_group_finished(step_group)
         self.on_flow_finished()
 
         if self._errors:
