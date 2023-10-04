@@ -1,27 +1,40 @@
 import random
 from typing import Any
-
-from pylon.core.tools import web, log  # pylint: disable=E0611,E0401
-from tools import rpc_tools, flow_tools
-import requests
-from .utils.evaluate import get_evaluator, EvaluateTemplate
 from time import sleep
 
-from pydantic import ValidationError
-from .models.pd.flow import Variable, EvaluatePayload, StartPayload, PausePayload, EndPayload
+from pylon.core.tools import log  # pylint: disable=E0611,E0401
+from tools import flow_tools
+
+from .utils.evaluate import get_evaluator, EvaluateTemplate
+from .utils.request import RequestManager
+from .models.pd.flow import (
+    EvaluatePayload, 
+    StartPayload, 
+    PausePayload, 
+    EndPayload,
+    RequestPD
+)
 
 
-# @web.rpc("flowy_make_request", "make_request")
-def _make_request(method: str, jwt_token: str, url: str):
-    headers = {}
-    if jwt_token:
-        headers['Authorization'] = f'Bearer {jwt_token}'
-        headers['Content-Type'] = 'application/json'
-    method = getattr(requests, method)
-    response = method(url, headers=headers)
-    if not response.status_code == 200:
-        return {'ok': False, 'error': response.json()}
-    return {"ok": True, 'result': response.json()}
+@flow_tools.flow(
+    uid='http_request',
+    display_name='Http Request',
+    tooltip='Http Request',
+    icon_fa='fa-solid fa-paper-plane',
+    inputs=1,
+    weight=10
+)
+def make_request(flow_context: dict, clean_data: RequestPD):
+    manager = RequestManager(**clean_data.dict())
+    content, code = manager.request()
+    if not code == 200:
+        return {'ok': False, 'error': content}
+    return {"ok": True, 'result': content}
+
+
+@flow_tools.validator(flow_uid='http_request')
+def make_request_validate(**kwargs) -> RequestPD:
+    return RequestPD.validate(kwargs)
 
 
 @flow_tools.flow(
