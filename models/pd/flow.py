@@ -1,16 +1,43 @@
 import json
 
-from pydantic import BaseModel, validator
-from typing import List, Optional
+from enum import Enum
+from pydantic import BaseModel, validator, constr
+from typing import List, Optional, Dict
+from tools import flow_tools
+
+
+class HTTPAction(Enum):
+    GET = "get"
+    POST = "post"
+    PUT = "put"
+    PATCH = "patch"
+    DELETE = "delete"
+
+
+class HTTPRequestType(Enum):
+    TEXT = "text"
+    JSON = "json"
+
+
+class RequestPD(BaseModel):
+    url: str
+    action: HTTPAction
+    headers: List[Dict[str, str]]
+    output_type: Optional[str] = "string"
+    request_type: Optional[HTTPRequestType] = HTTPRequestType.TEXT
+    body: Optional[str] = None
+
+    class Config:
+        use_enum_values = True
 
 
 class EvaluatePayload(BaseModel):
-    eval_input: str 
+    eval_input: str | constr(regex=flow_tools.PLACEHOLDER_VARIABLE_REGEX)
     output_type: Optional[str] = "string"
 
 
 class EndPayload(EvaluatePayload):
-    eval_input: Optional[str] = None 
+    eval_input: Optional[str] | constr(regex=flow_tools.PLACEHOLDER_VARIABLE_REGEX) = None 
 
 
 class PausePayload(BaseModel):

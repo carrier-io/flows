@@ -6,6 +6,7 @@ const nodeComponentMapping = {
     prompt: PromptNode,
     pause: PauseNode,
     end: EndNode,
+    http_request: RequestNode,
 }
 
 const getVueComponent = uid => {
