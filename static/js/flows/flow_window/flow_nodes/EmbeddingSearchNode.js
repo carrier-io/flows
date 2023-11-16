@@ -298,7 +298,7 @@ const EmbeddingSearchNode = {
                             Columns
                         </div>
                         <div>
-                            {{ selectedEmbedding?.params?.columns.join(',') || '-' }}
+                            {{ selectedEmbedding?.params?.columns?.join(',') || '-' }}
                         </div>
                     </div>
                     <div class="flex-column mt-3">
